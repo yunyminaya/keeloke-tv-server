@@ -1,0 +1,69 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>tv.keeloke.plugins</groupId>
+    <artifactId>cluster-registry-plugin</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>Keeloke TV - Cluster Registry Plugin</name>
+    <description>
+        Foundational service-discovery for a multi-node Keeloke TV Server deployment:
+        each node heartbeats its identity and live-stream count into Redis (via the
+        Redisson client already bundled with Ant Media Server), and a REST endpoint
+        lists all currently-alive nodes. This is NOT full Enterprise-grade clustering
+        (no automatic stream migration, no edge/origin routing, no shared session
+        state) - see keeloke-plugins/CLUSTERING_AND_SCALE_ROADMAP.md for what real
+        clustering additionally requires and why it isn't faked here.
+    </description>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <ant-media-server.version>2.11.3</ant-media-server.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.antmedia</groupId>
+            <artifactId>ant-media-server</artifactId>
+            <version>${ant-media-server.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.24.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>6.1.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>keeloke-cluster-registry-plugin</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals><goal>shade</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
