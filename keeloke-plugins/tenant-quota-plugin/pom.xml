@@ -1,0 +1,70 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>tv.keeloke.plugins</groupId>
+    <artifactId>tenant-quota-plugin</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>Keeloke TV - Tenant Quota &amp; Usage Analytics Plugin</name>
+    <description>
+        Adds per-application (tenant) concurrent-stream quotas and cumulative
+        usage metering (stream-minutes) on top of Ant Media Server Community
+        Edition. Uses the real org.red5.server.api.stream.IStreamPublishSecurity
+        hook to actually reject publishes over quota (not just log them), and
+        io.antmedia.plugin.api.IStreamListener to meter usage. User accounts and
+        roles (ADMIN/USER/READ_ONLY) are NOT reimplemented here - Community
+        Edition's built-in console already provides that; see the plugin
+        README for where it lives.
+    </description>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <ant-media-server.version>2.11.3</ant-media-server.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.antmedia</groupId>
+            <artifactId>ant-media-server</artifactId>
+            <version>${ant-media-server.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.24.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>6.1.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>keeloke-tenant-quota-plugin</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals><goal>shade</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

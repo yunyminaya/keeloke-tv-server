@@ -23,6 +23,13 @@ en `Keeloke-TV- Server/` (versión 2.11.3).
   balanceo de carga externo entre múltiples nodos.
   Expone `GET /keeloke/v1/cluster/nodes`.
 
+- **`tenant-quota-plugin/`** — cuotas reales de streams concurrentes por
+  aplicación/tenant (rechaza el publish si se excede, vía el hook
+  `IStreamPublishSecurity`) y analytics de uso (minutos, streams) en Redis.
+  Expone `GET /keeloke/v1/tenants/usage`. El sistema de usuarios/roles
+  (ADMIN/USER/READ_ONLY) **ya existe nativo** en Community — ver
+  `tenant-quota-plugin/TENANT_QUOTA_README.md`.
+
 - **`CLUSTERING_AND_SCALE_ROADMAP.md`** — explicación honesta de qué falta
   para clustering completo, WebRTC a gran escala y DRM, y por qué esas tres
   cosas concretas no se pueden fingir con un plugin (requieren cambios en el
