@@ -1,0 +1,3381 @@
+package io.antmedia;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.apache.catalina.util.NetMask;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.entity.ContentType;
+import org.bson.types.ObjectId;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Field;
+import dev.morphia.annotations.Id;
+import dev.morphia.annotations.Index;
+import dev.morphia.annotations.IndexOptions;
+import dev.morphia.annotations.Indexes;
+import io.antmedia.muxer.IAntMediaStreamHandler;
+import io.antmedia.muxer.Muxer;
+
+/**
+ * Application Settings for each application running in Ant Media Server.
+ * Each setting should have a default value with @Value annotation. Otherwise it breaks compatibility 
+ *
+ * These settings are set for each applications and stored in the file {@code <AMS_DIR>/webapps/<AppName>/WEB_INF/red5-web.properties}.
+ * Click on any field to see its default value.
+ *
+ * @author mekya
+ *
+ */
+@Entity("AppSettings")
+@Indexes({ @Index(fields = @Field("appName"), options = @IndexOptions(unique = true, name="appName_unique_index"))})
+
+@PropertySource("/WEB-INF/red5-web.properties")
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class AppSettings implements Serializable{
+
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * @hidden
+	 */
+	private static final Logger logger = LoggerFactory.getLogger(AppSettings.class);
+
+	@JsonIgnore
+	@Id
+	private ObjectId dbId;
+
+	/**
+	 * @hidden
+	 */
+	public static final String PROPERTIES_FILE_PATH = "/WEB-INF/red5-web.properties";
+	/**
+	 * @hidden
+	 */
+	public static final String BEAN_NAME = "app.settings";
+
+
+	/**
+	 * @hidden
+	 * In data channel, player messages are delivered to nobody,
+	 * In order words, player cannot send messages
+	 */
+	public static final String DATA_CHANNEL_PLAYER_TO_NONE = "none";
+
+	/**
+	 * @hidden
+	 * In data channel, player messages are delivered to only publisher
+	 */
+	public static final String DATA_CHANNEL_PLAYER_TO_PUBLISHER = "publisher";
+
+	/**
+	 * @hidden
+	 * In data channel, player messages are delivered to everyone both publisher and all players
+	 */
+	public static final String DATA_CHANNEL_PLAYER_TO_ALL = "all";
+
+	//use lower case for theses fields because they are used in extension as well
+	public static final String SETTINGS_DB_APP_NAME = "db.app.name";
+
+	/**
+	 * @hidden
+	 * WebRTC SDP Semantics:PLAN B
+	 */
+	public static final String SDP_SEMANTICS_PLAN_B = "planB";
+
+	/**
+	 * @hidden
+	 * WebRTC SDP Semantics:UNIFIED PLAN
+	 */
+	public static final String SDP_SEMANTICS_UNIFIED_PLAN = "unifiedPlan";
+
+	/**
+	 *  For default values
+	 *  
+	 *  "default" is the default role which is regular case
+	 *  "speaker" is the one who is speaking in the webinar
+	 *  "attendee" is the one who is attending the webinar and not publishing any video, just watching with playOnly mode
+	 *  "active_attendee" is the one who is attending the webinar and publishing video(Generally the user who joined the call during the webinar)
+	 *  
+	 * "default": ["default"] -> means default role can see the guys in the default role
+	 * "speaker":["attendee","speaker"] -> //means speaker can see speaker and attendee
+	 * "attendee":["speaker","active_attendee"] -> //means attendee can see speaker and active attendee
+	 * "active_attendee":["active_attendee","speaker"] ->//means active attendee can see active attendee and speaker
+	 */
+	public static final String DEFAULT_VISIBILITY_MATRIX = ""
+			+ "{"
+				+ "\""+ IAntMediaStreamHandler.DEFAULT_USER_ROLE +"\": [\""+IAntMediaStreamHandler.DEFAULT_USER_ROLE +"\"],"
+														
+				+ "\"speaker\":[\"speaker\", \"active_attendee\"]," //means speaker can see speaker and active_attendee
+								
+				+ "\"attendee\":[\"speaker\",\"active_attendee\"]," //means attendee can see speaker and active attendee
+				
+				+ "\"active_attendee\":[\"active_attendee\",\"speaker\"]," //means active attendee can see active attendee and speaker
+
+			+ "}";
+	
+	//use lower case for theses fields because they are used in extension as well
+	public static final String PREVIEW_FORMAT_PNG = "png";
+	public static final String PREVIEW_FORMAT_JPG = "jpg";
+	public static final String PREVIEW_FORMAT_WEBP = "webp";
+
+
+	/**
+	 * Comma separated CIDR that rest services are allowed to response
+	 * Allowed IP addresses to reach REST API, It must be in CIDR format as a.b.c.d/x
+	 */
+	@Value("${remoteAllowedCIDR:127.0.0.1}")
+	private String remoteAllowedCIDR = "127.0.0.1";
+
+	/**
+	 * It's mandatory, If it is set true then a mp4 file is created into {@code <APP_DIR>/streams} directory
+	 * Default value is false
+	 */
+	@Value("${mp4MuxingEnabled:false}")
+	private boolean mp4MuxingEnabled;
+
+
+	/**
+	 * Enable/Disable WebM recording
+	 */
+	@Value("${webMMuxingEnabled:false}")
+	private boolean webMMuxingEnabled;
+
+
+	/**
+	 * It's mandatory, Date and time are added to created .mp4 file name, Default value is false
+	 */
+	@Value("${addDateTimeToMp4FileName:false}")
+	private boolean addDateTimeToMp4FileName;
+
+	/**
+	 * The format of output mp4 and ts files. Generates an extended filename based on the given parameters and file name format.
+	 * This method constructs an extended file name by appending various components based on the provided format:
+	 * - {customText}: Appends any custom text enclosed in curly braces
+	 * - %r: Appends the resolution (if non-zero) followed by 'p' (e.g., "720p")
+	 * - %b: Appends the bitrate in kbps (if non-zero) followed by "kbps" (e.g., "1500kbps")
+	 *
+	 * If addDateTimeToResourceName is true, it prepends a timestamp to the filename using the format:
+	 * yyyy-MM-dd_HH-mm-ss.SSS
+	 *
+	 * Examples:
+	 * 1. name = "myVideo", resolution = 720, bitrate = 1500, fileNameFormat = "%r%b"
+	 *    Result: "myVideo_720p1500kbps"
+	 *
+	 * 2. name = "stream1", resolution = 480, bitrate = 800, fileNameFormat = "{HD}%r%b"
+	 *    Result: "stream1_HD480p800kbps"
+	 *
+	 * 3. name = "lecture", resolution = 1080, bitrate = 2000, fileNameFormat = "%r{4K}%b"
+	 *    Result: "lecture_1080p4K2000kbps"
+	 *
+	 * 4. name = "live", resolution = 720, bitrate = 1500, fileNameFormat = "%b%r{custom}", addDateTimeToResourceName = true
+	 *    Result: "live-2023-10-15_12-05-30.123_1500kbps720pcustom"
+	 *    (assuming current date-time is October 15, 2023, 12:05:30.123)
+	 */
+	@Value("${fileNameFormat:%r%b}")
+	private String fileNameFormat = "%r%b";
+
+
+	/**
+	 * Enable/disable hls recording
+	 * If it is set true then HLS files are created into {@code <APP_DIR>/streams} and HLS playing is enabled,
+	 * Default value is true
+	 */
+	@Value("${hlsMuxingEnabled:true}")
+	private boolean hlsMuxingEnabled = true;
+
+
+	/**
+	 * Encoder settings in JSON format
+	 * This must be set for adaptive streaming,
+	 * If it is empty SFU mode will be active in WebRTCAppEE,
+	 * video height, video bitrate, and audio bitrate are set as an example,
+	 * Ex. 480,300000,96000,360,200000,64000.
+	 */
+	@Value("${encoderSettingsString:}")
+	private String encoderSettingsString = "";
+
+	/**
+	 * This is for making this instance run also as a signaling server.
+	 * Signaling Server lets Ant Media Server instances behind NAT stream its content to the peer in the Internet
+	 */
+	@Value("${signalingEnabled:false}")
+	private boolean signalingEnabled = false;
+
+	/**
+	 * This is for using another Ant Media instance as signaling server.
+	 * If your server is behind a NAT it will allow possible connection.
+	 * It should be full qualified URI like this
+	 * ws://107.23.25.77:5080/WebRTCAppEE/websocket/signaling
+	 */
+	@Value("${signalingAddress:}")
+	private String signalingAddress = "";
+
+	/**
+	 * Number of segments(chunks) in m3u8 files
+	 * Set the maximum number of playlist entries, If 0 the list file will contain all the segments,
+	 */
+	@Value("${hlsListSize:15}")
+	private String hlsListSize = "15";
+
+	/**
+	 * Duration of segments in m3u8 files
+	 * Target segment length in seconds,
+	 * Segment will be cut on the next key frame after this time has passed.
+	 */
+	@Value("${hlsTime:2}")
+	private String hlsTime = "2";
+
+	/**
+	 * Binary entity for uploading the extensions
+	 * 0 means does not upload, 1 means upload
+	 * Least significant digit switches mp4 files upload to s3
+	 * Second digit switches HLS files upload to s3
+	 * Most significant digit switches preview(png, jpeg) files upload to s3
+	 * Example: 5 ( 101 in binary ) means upload mp4 and previews but not HLS
+	 * HLS files still will be saved on the server if deleteHLSFilesOnEnded flag is false
+	 */
+	@Value( "${uploadExtensionsToS3:7}" )
+	private int uploadExtensionsToS3=7;
+
+	/*
+	 * S3 Storage classes. Possible values are
+	 * 		STANDARD, REDUCED_REDUNDANCY, GLACIER, STANDARD_IA, ONEZONE_IA, INTELLIGENT_TIERING, DEEP_ARCHIVE
+	 *
+	 * Case sensitivity is important.
+	 *
+	 * More information is available at AWS S3 -> https://www.amazonaws.cn/en/s3/storage-classes/
+	 */
+	@Value( "${s3StorageClass:STANDARD}" )
+	private String s3StorageClass="STANDARD";
+	/**
+	 * Endpoint will try to republish if error occurs,
+	 * however the error might get fixed internally in case of small issues without republishing
+	 * This value is the check time for endpoint in 3 trials
+	 * For example for 2 seconds, there will be 2 checks in 2 second intervals,
+	 * if each of them fails it will try to republish in 3rd check.
+	 */
+	@Value ( "${endpointHealthCheckPeriodMs:2000}" )
+	private int endpointHealthCheckPeriodMs=2000;
+
+	/**
+	 * This limit is for republishing to a certain endpoint for how many times.
+	 * For example in case we tried to republish 3 times and still got an error
+	 * we conclude that the endpoint is dead and close it.
+	 *
+	 * Set to a negative value (e.g. -1) to retry indefinitely. Useful when the
+	 * remote endpoint may have long outages and the operator wants the source
+	 * to keep reconnecting until it comes back.
+	 */
+	@Value ( "${endpointRepublishLimit:3}" )
+	private int endpointRepublishLimit=3;
+
+	/**
+	 * Duration of segments in mpd files,
+	 * Segments are a property of DASH. A segment is the minimal download unit.
+	 *
+	 */
+	@Value ( "${dashSegDuration:6}" )
+	private String dashSegDuration="6";
+
+	/**
+	 * Fragments are a property of fragmented MP4 files, Typically a fragment consists of moof + mdat.
+	 *
+	 */
+	@Value ( "${dashFragmentDuration:0.5}" )
+	private String dashFragmentDuration="0.5";
+
+
+	/**
+	 * Latency of the DASH streaming,
+	 */
+	@Value ( "${dashTargetLatency:3.5}" )
+	private String targetLatency="3.5";
+
+	/**
+	 * DASH window size, Number of files in manifest
+	 */
+	@Value ( "${dashWindowSize:5}" )
+	private String dashWindowSize="5";
+
+	/**
+	 * DASH extra window size, Number of segments kept outside of the manifest before removing from disk
+	 */
+	@Value ( "${dashExtraWindowSize:5}" )
+	private String dashExtraWindowSize="5";
+
+	/**
+	 * Enable low latency dash, This settings is effective if dash is enabled
+	 */
+	@Value ( "${dashEnableLowLatency:true}" )
+	private boolean lLDashEnabled=true;
+
+	/**
+	 * Enable low latency hls via dash muxer, LLHLS is effective if dash is enabled.
+	 */
+	@Value ( "${hlsEnableLowLatency:false}" )
+	private boolean lLHLSEnabled=false;
+
+	/**
+	 * Enable hls through DASH muxer, LLHLS is effective if dash is enabled.
+	 */
+	@Value ( "${hlsEnabledViaDash:false}" )
+	private boolean hlsEnabledViaDash=false;
+
+	/**
+	 * Use timeline in dash muxing.
+	 */
+	@Value ( "${useTimelineDashMuxing:false}" )
+	private boolean useTimelineDashMuxing=false;
+
+	/**
+	 * Enable/disable webrtc,
+	 * It's mandatory, If it is set true then WebRTC playing is enabled, Default value is false
+	 */
+	@Value ( "${webRTCEnabled:true}" )
+	private boolean webRTCEnabled=true;
+
+	/**
+	 * The flag that sets using the original webrtc stream in streaming,
+	 * This setting is effective if there is any adaptive bitrate setting,
+	 * For instance assume that there is adaptive bitrate with 480p and incoming stream is 720p
+	 * Then if this setting is true, there are two bitrates for playing 720p and 480p,
+	 * In this case if this setting is false, there is one bitrate for playing that is 480p
+	 */
+	@Value ( "${useOriginalWebRTCEnabled:false}" )
+	private boolean useOriginalWebRTCEnabled=false;
+
+	/**
+	 * It's mandatory,
+	 * If this value is true, hls files(m3u8 and ts files) are deleted after the broadcasting
+	 * has finished,
+	 * Default value is true.
+	 */
+	@Value ( "${deleteHLSFilesOnEnded:true}" )
+	private boolean deleteHLSFilesOnEnded = true;
+
+	/**
+	 * If this value is true, dash files(mpd and m4s files) are deleted after the broadcasting
+	 * has finished.
+	 */
+	@Value ( "${deleteDASHFilesOnEnded:true}" )
+	private boolean deleteDASHFilesOnEnded = true;
+
+	/**
+	 * The secret string used for creating hash based tokens
+	 * The key that used in hash generation for hash-based access control.
+	 */
+	@Value ( "${tokenHashSecret:}" )
+	private String tokenHashSecret = "";
+
+	/**
+	 * It's mandatory,
+	 * If it is set true then hash based access control enabled for publishing,
+	 * enable hash control as token for publishing operations using shared secret
+	 * Default value is false.
+	 */
+	@Value ("${hashControlPublishEnabled:false}")
+	private boolean hashControlPublishEnabled;
+
+	/**
+	 * It's mandatory,
+	 * If it is set true then hash based access control enabled for playing,
+	 * enable hash control as token for playing operations using shared secret
+	 * Default value is false.
+	 */
+	@Value ("${hashControlPlayEnabled:false}")
+	private boolean hashControlPlayEnabled;
+
+	/**
+	 * The URL for action callback
+	 *  You must set this to subscribe some event notifications,
+	 *  For details check: https://antmedia.io/webhook-integration/
+	 */
+	@Value ("${listenerHookURL:}")
+	private String listenerHookURL = "";
+
+	/**
+	 * The control for publishers
+	 * It's mandatory,
+	 * If it is set true you cannot start publishing unless you add the stream id to the database,
+	 * You can add stream id by REST API. Default value is false.
+	 */
+	@Value ("${acceptOnlyStreamsInDataStore:false}")
+	private boolean acceptOnlyStreamsInDataStore;
+
+	/**
+	 * The control for rooms
+	 */
+	@Value ("${acceptOnlyRoomsInDataStore:false}")
+	private boolean acceptOnlyRoomsInDataStore;
+
+	/**
+	 * The settings for enabling one-time token control mechanism for accessing resources and publishing
+	 * Check for details: https://antmedia.io/secure-video-streaming/. Default value is false.
+	 */
+
+	@Value("${publishTokenControlEnabled:false}")
+	private boolean publishTokenControlEnabled ;
+	// check old SETTINGS_TOKEN_CONTROL_ENABLED for backward compatibility
+	// https://stackoverflow.com/questions/49653241/can-multiple-property-names-be-specified-in-springs-value-annotation
+	/**
+	 * The settings for enabling one-time token control mechanism for accessing resources and publishing
+	 * It's mandatory, This enables token control,
+	 * Check for details: https://antmedia.io/secure-video-streaming/. Default value is false.
+	 */
+	@Value("${playTokenControlEnabled:false}")
+	private boolean playTokenControlEnabled ;
+
+	/**
+	 * The setting for accepting only time based token(TOTP) subscribers as connections to the streams
+	 */
+	@Value( "${enableTimeTokenForPlay:false}" )
+	private boolean enableTimeTokenForPlay;
+
+	/**
+	 * TOTP(Time-based One Time Password) Token Secret for Playing. If subscriber is not available in database, server checks the TOTP code
+	 * against this value
+	 */
+	@Value( "${timeTokenSecretForPlay:#{null}}")
+	private String timeTokenSecretForPlay;
+
+	/**
+	 * The settings for accepting only time based token(TOTP) subscribers as connections to the streams
+	 */
+	@Value( "${enableTimeTokenForPublish:false}" )
+	private boolean enableTimeTokenForPublish;
+
+	/**
+	 * TOTP(Time-based One Time Password) Token Secret for Publishing. 
+	 * If subscriber is not available in database, server checks the TOTP code
+	 * against this value
+	 */
+	@Value( "${timeTokenSecretForPublish:#{null}}")
+	private String timeTokenSecretForPublish;
+
+	/**
+	 * period for the generated time token 
+	 */
+	@Value ("${timeTokenPeriod:60}")
+	private int timeTokenPeriod = 60;
+
+
+	/**
+	 * It can be event or vod, Check HLS documentation for EXT-X-PLAYLIST-TYPE.
+	 *
+	 */
+	@Value( "${hlsPlayListType:}" )
+	private String hlsPlayListType = "";
+
+	/**
+	 * HLS Muxer segment type. It can be "mpegts" or "fmp4"
+	 *
+	 * fmp4 is compatible to play the HEVC HLS Streams
+	 */
+	@Value( "${hlsSegmentType:mpegts}" )
+	private String hlsSegmentType = "mpegts";
+
+
+	/**
+	 * HLS segment file suffix format. 
+	 * By default: %09d which means 9 digit incremental
+	 * To add time: It can be like %Y%m%d-%s
+	 * If you want to use both incrementing numbers and date together
+	 * - Please use double % for the incrementing number suffix like: %s-%%09d
+	 * - +second_level_segment_index to HLS flags
+	 *
+	 */
+	@Value( "${hlsSegmentFileSuffixFormat:%09d}" )
+	private String hlsSegmentFileSuffixFormat = "%09d";
+
+	/**
+	 * Overwrite preview files if exist, default value is false
+	 * If it is set true and new stream starts with the same id,
+	 * preview of the new one overrides the previous file,
+	 * If it is false previous file saved with a suffix.
+	 */
+	@Value( "${previewOverwrite:false}" )
+	private boolean previewOverwrite;
+
+
+	
+	/**
+	 * It's mandatory,
+	 * This determines the period (milliseconds) of preview (png, jpg) file creation,
+	 * This file is created into {@code <APP_DIR>/preview} directory. Default value is 5000.
+	 */
+
+	@Value( "${createPreviewPeriod:5000}" )
+	private int createPreviewPeriod = 5000;
+
+	/**
+	 * Period of restarting stream fetchers automaticallyin seconds. 
+	 * If it's more than 0, stream fetcher (aka. stream source) are restarted every seconds that is specified in this parameter.
+	 * Restart time for fetched streams from external sources,
+	 * Default value is 0
+	 */
+	@Value( "${restartStreamFetcherPeriod:0}" )
+	private int restartStreamFetcherPeriod;
+
+	/**
+	 * Flag to specify Stream sources whether to start automatically when server is started. 
+	 * If it is true, stream sources are started automatically when server is started
+	 * If it's false, stream sources need to be started programmatically or manually by the user
+	 */
+	@Value("${startStreamFetcherAutomatically:false}")
+	private boolean startStreamFetcherAutomatically;
+
+	/**
+	 * Stream fetcher buffer time in milliseconds,
+	 * Stream is buffered for this duration and after that it will be started. It's also good for re-ordering packets.
+	 *
+	 * 0 means no buffer,
+	 * Default value is 0
+	 */
+	@Value( "${streamFetcherBufferTime:0}" )
+	private int streamFetcherBufferTime = 0;
+
+
+	/**
+	 * HLS Flags for FFmpeg HLS Muxer,
+	 * Please add value by plus prefix in the properties file like this
+	 * settings.hlsflags=+program_date_time
+	 *
+	 * you can add + separated more options like below
+	 * settings.hlsflags=+program_date_time+round_durations+append_list
+	 *
+	 * Separate with + or -.
+	 * Check for details: https://ffmpeg.org/ffmpeg-formats.html#Options-6
+	 *
+	 */
+	@Value( "${hlsflags:delete_segments+program_date_time}")
+	private String hlsflags="delete_segments+program_date_time";
+
+	private String mySqlClientPath = "/usr/local/antmedia/mysql";
+
+	/**
+	 * This is a script file path that is called by Runtime when muxing is finished,
+	 * Bash script file path will be called after stream finishes.
+	 */
+	@Value( "${muxerFinishScript:}" )
+	private String muxerFinishScript = "";
+	
+	/**
+	 * This is a script file path that is called by Runtime when streaming has started,
+	 * Bash script file path will be called.
+	 */
+	@Value( "${streamStartedScript:}" )
+	private String streamStartedScript = "";
+	
+	/**
+	 * This is a script file path that is called by Runtime when stream ends,
+	 * Bash script file path will be called after stream ends.
+	 */
+	@Value( "${streamEndedScript:}" )
+	private String streamEndedScript = "";
+	
+	/**
+	 * This is a script file path that is called by Runtime when stream idle timeout occurs,
+	 * Bash script file path will be called after stream idle timeout.
+	 */
+	@Value( "${streamIdleTimeoutScript:}" )
+	private String streamIdleTimeoutScript = "";
+
+	/**
+	 * It's mandatory,
+	 * Determines the frame rate of video publishing to the WebRTC players,
+	 * Default value is 30 because users are complaining about the 20fps(previous value) and may not know to change it
+	 */
+	@Value( "${webRTCFrameRate:30}" )
+	private int webRTCFrameRate = 30;
+
+	/**
+	 * Min port number of the port range of WebRTC, It's effective when user publishes stream,
+	 * This value should be less than the {@link #webRTCPortRangeMax}
+	 * Determines the minimum port number for WebRTC connections, Default value is 0.
+	 */
+	@Value( "${webRTCPortRangeMin:50000}")
+	private int webRTCPortRangeMin = 50000;
+
+	/**
+	 * Max port number of the port range of WebRTC, It's effective when user publishes stream
+	 * In order to port range port this value should be higher than {@link #webRTCPortRangeMin}
+	 */
+	@Value( "${webRTCPortRangeMax:60000}")
+	private int webRTCPortRangeMax = 60000;
+
+	/**
+	 * STUN or TURN Server URI
+	 * STUN server URI used for WebRTC ICE candidates
+	 * You can check: https://antmedia.io/learn-webrtc-basics-components/,
+	 * Default value is stun:stun.l.google.com:19302
+	 *
+	 * STUN or TURN URL can be set for this properoy
+	 */
+	@Value( "${stunServerURI:stun:stun1.l.google.com:19302}")
+	private String stunServerURI = "stun:stun1.l.google.com:19302";
+
+	/**
+	 * TURN server username for WebRTC ICE candidates.
+	 * In order to be effective, {@code #stunServerURI} and {@code #turnServerCredential} should be set
+	 */
+	@Value( "${turnServerUsername:}")
+	private String turnServerUsername = "";
+
+	/**
+	 * TURN server credentai for WebRTC ICE candidates.
+	 * In order to be effective, {@code #stunServerURI} and {@code #turnServerUsername} should be set
+	 */
+	@Value( "${turnServerCredential:}")
+	private String turnServerCredential = "";
+
+	/**
+	 * It's mandatory,
+	 * TCP candidates are enabled/disabled.It's effective when user publishes stream
+	 * It's disabled by default
+	 * If it is set true then TCP candidates can be used for WebRTC connection,
+	 * If it is false only UDP port will be used,
+	 * Default value is true.
+	 */
+	@Value( "${webRTCTcpCandidatesEnabled:false}")
+	private boolean webRTCTcpCandidatesEnabled;
+
+	/**
+	 * WebRTC SDP Semantics
+	 * It can "planB" or "unifiedPlan"
+	 */
+	@Value( "${webRTCSdpSemantics:" + SDP_SEMANTICS_UNIFIED_PLAN + "}")
+	private String webRTCSdpSemantics = SDP_SEMANTICS_UNIFIED_PLAN;
+
+
+	/**
+	 * Port Allocator Flags for WebRTC
+	 * PORTALLOCATOR_DISABLE_UDP = 0x01,
+	 * PORTALLOCATOR_DISABLE_STUN = 0x02,
+	 * PORTALLOCATOR_DISABLE_RELAY = 0x04,
+	 */
+	@Value( "${portAllocatorFlags:0}")
+	private int portAllocatorFlags;
+
+
+	/**
+	 * Name of the encoder to be used in adaptive bitrate,
+	 * If there is a GPU, server tries to open h264_nvenc,
+	 * If there is no GPU, server tries to open openh264 by default
+	 * Can be h264_nvenc or openh264. If you set h264_nvenc and then if it cannot be opened, libx264 will be used,	
+	 */
+	@Value( "${encoderName:}")
+	private String encoderName = "";
+	
+	/**
+	 * Encoder specific parameters in key-value mapping way with JSON objects.
+	 * 
+	 * Keys should match the encoder names officially in ffmpeg for instance libopenh264, h264_nvenc, vpx, hevc_nvenc
+	 * 
+	 * Then you can have a json object like this which includes the parameters for the encoder
+	 * {
+	 * "libopenh264": {
+	 *   "profile":"main",
+	 *   
+	 * },
+	 * "vpx": {
+	 *  "deadline":"realtime",
+	 * },
+	 * "h264_nvenc": {
+	 *   "preset":"ll"
+	 * }
+	 * }
+	 */
+	@Value("${encoderParameters:{}}")
+	private Map<String, Map<String,String>> encoderParameters = new HashMap<>();
+
+	/**
+	 * Encoder thread count.
+	 */
+	@Value( "${encoderThreadCount:0}")
+	private int encoderThreadCount;
+
+	/**
+	 * Encoder thread type
+	 * 0: auto
+	 * 1: frame
+	 * 2: slice
+	 */
+	@Value( "${encoderThreadType:0}")
+	private int encoderThreadType;
+
+	/**
+	 * VP8 Encoder thread count.
+	 */
+	@Value( "${vp8EncoderThreadCount:1}")
+	private int vp8EncoderThreadCount = 1;
+
+	/**
+	 * It's mandatory,
+	 * Determines the height of preview file,
+	 * Default value is 480
+	 */
+
+	@Value( "${previewHeight:480}")
+	private int previewHeight = 480;
+
+	/**
+	 * Generate preview if there is any adaptive settings,
+	 *
+	 * Preview generation depends on adaptive settings and it's generated by default
+	 */
+	@Value( "${generatePreview:false}")
+	private boolean generatePreview;
+	
+	/**
+	 * Preview format can be png or jpg
+	 */
+	@Value( "${previewFormat:"+PREVIEW_FORMAT_PNG+"}")
+	private String previewFormat = PREVIEW_FORMAT_PNG;
+	
+	/**
+	 * Preview quality. It's valid for JPG and WEBP formats.
+	 * JPG: The range is between 2 to 31. 2 is the best quality, largest file size and 31 is the worst quality and lowest file size. Recommended value is 5
+	 * WEBP: The range is between 0 to 100. 0 is the worst quality, smallest file size and 100 is the best quality and largest file size.Recommended value is 75
+	 * 
+	 * Pay attention that the quality parameter is not valid for PNG and default value for this preview is for WebP format. You need to change for JPG format
+	 */
+	@Value("${previewQuality:75}")
+	private int previewQuality = 75;
+	
+
+	/**
+	 * Whether to write viewers(HLS, WebRTC) count to the data store, it's true by default. 
+	 * If you set it to false, it decreases the number of write operations to the data store and you don't see the viewer count in datastore
+	 */
+	@Value( "${writeStatsToDatastore:true}")
+	private boolean writeStatsToDatastore = true;
+
+	/**
+	 * Can be "gpu_and_cpu" or "only_gpu"
+	 *
+	 * "only_gpu" only tries to open the GPU for encoding,
+	 * If it cannot open the gpu codec it returns false
+	 *
+	 * "gpu_and_cpu" first tries to open the GPU for encoding
+	 * if it does not open, it tries to open the CPU for encoding
+	 *
+	 */
+	@Value( "${encoderSelectionPreference:gpu_and_cpu}")
+	private String encoderSelectionPreference = "gpu_and_cpu";
+
+	/**
+	 * Comma separated CIDR that server accepts/ingests RTMP streams from,
+	 * Default value is null which means that it accepts/ingests stream from everywhere
+	 */
+	@Value( "${allowedPublisherCIDR:}")
+	private String allowedPublisherCIDR = "";
+
+	/**
+	 * *******************************************************
+	 * What is Excessive Bandwidth Algorithm?
+	 * Excessive Bandwidth Algorithm tries to switch to higher bitrate even if bandwidth seems not enough
+	 *
+	 * Why is it implemented?
+	 * WebRTC stack sometimes does not calculate the bandwidth correctly. For instance,
+	 * when network quality drop for a few seconds, it does not calculates the bitrate correctly
+	 *
+	 * How it works?
+	 * If measured bandwidth - the current video bitrate is more than {@link #excessiveBandwidthValue}
+	 * for consecutive {@link #excessiveBandwidthCallThreshold} times it switches to higher bitrate
+	 *
+	 * If bandwidth measured is still than the required bandwidth it tries {@link #excessiveBandwithTryCountBeforeSwitchback}
+	 * times to stay in the high bitrate. It also switches back to lower quality 
+	 * if packetLoss different is bigger than {@link #packetLossDiffThresholdForSwitchback} or 
+	 * rtt time difference is bigger than {@link #rttMeasurementDiffThresholdForSwitchback} before 
+	 * {@link #tryCountBeforeSwitchback} reaches to zero
+	 *
+	 *
+	 * Side effect
+	 * If network fluctuates too much or not consistent, quality of the video changes also fluctuates too much for the viewers
+	 * *********************************************************
+	 */
+
+	/**
+	 *  The excessive bandwidth threshold value
+	 */
+	@Value("${excessiveBandwidthValue:300000}")
+	private int excessiveBandwidthValue = 300000;
+
+
+
+	/**
+	 * The excessive bandwidth call threshold value
+	 */
+	@Value("${excessiveBandwidthCallThreshold:3}")
+	private int excessiveBandwidthCallThreshold = 3;
+
+
+	@Value("${excessiveBandwithTryCountBeforeSwitchback:4}")
+	private int excessiveBandwithTryCountBeforeSwitchback = 4;
+
+	/**
+	 * Enable or disable excessive bandwidth algorithm
+	 */
+	@Value("${excessiveBandwidthAlgorithmEnabled:false}")
+	private boolean excessiveBandwidthAlgorithmEnabled;
+
+	/**
+	 * packet loss threshold if packetLoss is bigger than this value in ExcessiveBandwidth
+	 * algorithm, it switches back to lower quality without try every attempts {@link #excessiveBandwithTryCountBeforeSwitchback}
+	 */
+	@Value("${packetLossDiffThresholdForSwitchback:10}")
+	private int packetLossDiffThresholdForSwitchback = 10;
+
+	/**
+	 * rtt measurement threshold diff if rttMeasurement is bigger than this value in ExcessiveBandwidth
+	 * algorithm, it switches back to lower quality without trying every attempt.
+	 */
+	@Value("${rttMeasurementDiffThresholdForSwitchback:20}")
+	private int rttMeasurementDiffThresholdForSwitchback=20;
+
+	/**
+	 * Replace candidate addr with server addr,
+	 * In order to use it you should set serverName in conf/red5.properties
+	 */
+	@Value("${replaceCandidateAddrWithServerAddr:false}")
+	private boolean replaceCandidateAddrWithServerAddr;
+
+
+	/**
+	 * Application name for the data store which should exist so that no default value
+	 * such as LiveApp, WebRTCApp etc.
+	 */
+	@Value("${appName:${"+SETTINGS_DB_APP_NAME+":}}")
+	private String appName = "";
+
+	/**
+	 * If webrtc client(publish or play) is not started in this time, it'll close automatically.
+	 * It's also being used as a timeout to let publisher reconnect in fluctuating networks or ungraceful termination such as
+	 * closing the browser without closing the connection.
+	 */
+	@Value("${webRTCClientStartTimeoutMs:10000}")
+	private int webRTCClientStartTimeoutMs = 10000;
+
+	/**
+	 * Update time of the setting in the cluster
+	 */
+	private long updateTime = 0;
+
+	/**
+	 * Forwards the http requests with this extension to {@link #httpForwardingBaseURL}
+	 * It supports comma separated extensions Like mp4,m3u8
+	 * Don't add any leading, trailing white spaces
+	 */
+	@Value("${httpForwardingExtension:}")
+	private String httpForwardingExtension = "";
+
+	/**
+	 * Forward the incoming http request to this base url
+	 */
+	@Value("${httpForwardingBaseURL:}")
+	private String httpForwardingBaseURL = "";
+
+	/**
+	 * Max analyze duration in for determining video and audio existence in RTMP, SRT and Stream Sources
+	 */
+	@Value("${maxAnalyzeDurationMS:1500}")
+	private int maxAnalyzeDurationMS = 1500;
+
+	/**
+	 * Enable/Disable IPv6 Candidates for WebRTC It's disabled by default
+	 */
+	@Value("${disableIPv6Candidates:true}")
+	private boolean disableIPv6Candidates = true;
+
+	/**
+	 * Specify the rtsp transport type in pulling IP Camera or RTSP sources
+	 * It can have string or integer values. 
+	 * One value can be given at a time as string. It can be udp, tcp udp_multicast, http, https
+	 * Multiple values can be given at a time by OR operation 
+	 * udp: {@code 1 << 0 = 1}
+	 * tcp: {@code 1 << 1 = 2}
+	 * udp_multicast: {@code 1 << 2 = 4}
+	 * http: {@code 1 << 8 = 256}
+	 * https: {@code 1 << 9 = 512}
+	 *
+	 * Default value is 3 which is udp(1) OR tcp(2)
+	 * 0x01 | 0x10 = 0x11 = 3
+	 */
+	@Value("${rtspPullTransportType:3}")
+	private String rtspPullTransportType = "3";
+
+	/**
+	 * Specify the rtspTimeoutDurationMs in pulling IP Camera or RTSP sources
+	 */
+	@Value("${rtspTimeoutDurationMs:5000}")
+	private int rtspTimeoutDurationMs = 5000;
+
+	/**
+	 * Max FPS value in RTMP streams
+	 */
+	@Value("${maxFpsAccept:0}")
+	private int maxFpsAccept;
+
+	/**
+	 * Max Resolution value in RTMP streams
+	 */
+	@Value("${maxResolutionAccept:0}")
+	private int maxResolutionAccept;
+
+	/**
+	 * Max Bitrate value in RTMP streams
+	 */
+	@Value("${maxBitrateAccept:0}")
+	private int maxBitrateAccept;
+
+	/**
+	 * Enable/Disable h264 encoding It's enabled by default
+	 */
+	@Value("${h264Enabled:true}")
+	private boolean h264Enabled = true;
+
+	/**
+	 * Enable/Disable vp8 encoding It's disabled by default
+	 */
+	@Value("${vp8Enabled:false}")
+	private boolean vp8Enabled;
+	
+	/**
+	 * Enable/Disable AV1 encoding It's disabled by default
+	 */
+	@Value("${av1Enabled:false}")
+	private boolean av1Enabled;
+
+	/**
+	 * Enable/disable H265 Encoding Disabled by default
+	 */
+	@Value("${h265Enabled:false}")
+	private boolean h265Enabled;
+
+
+	/**
+	 * Enable/Disable data channel It's disabled by default
+	 * When data channel is enabled, publisher can send messages to the players
+	 */
+	@Value("${dataChannelEnabled:true}")
+	private boolean dataChannelEnabled = true;
+
+
+	/**
+	 * Defines the distribution list for player messages
+	 * it can be  none/publisher/all
+	 * none: player messages are delivered to nobody
+	 * publisher: player messages are delivered to only publisher
+	 * all:  player messages are delivered to everyone both publisher and all players
+	 */
+	@Value("${dataChannelPlayerDistribution:"+DATA_CHANNEL_PLAYER_TO_ALL+"}")
+	private String dataChannelPlayerDistribution = DATA_CHANNEL_PLAYER_TO_ALL;
+
+	/**
+	 * RTMP ingesting buffer time in Milliseconds Server buffer this amount of video packet in order to compensate
+	 * when stream is not received for some time
+	 */
+	@Value("${rtmpIngestBufferTimeMs:0}")
+	private long rtmpIngestBufferTimeMs;
+
+	/**
+	 * All data channel messages are delivered to these hook as well
+	 * So that it'll be integrated to any third party application
+	 */
+	@Value("${dataChannelWebHookURL:}")
+	private String dataChannelWebHookURL = "";
+
+	/**
+	 * The height of the stream that is transcoded from incoming WebRTC stream to the RTMP
+	 * This settings is effective in community edition by default
+	 * It's also effective WebRTC to RTMP direct forwarding by giving rtmpForward=true in WebSocket communication
+	 * in Enterprise Edition
+	 */
+	@Value("${heightRtmpForwarding:360}")
+	private int heightRtmpForwarding = 360;
+
+	/**
+	 * In SFU mode we still transcode the audio to opus and aac
+	 * This settings determines the audio bitrate for opus and aac
+	 * It's the bitrate that is used transcoding the audio in AAC and Opus
+	 * After version(2.3), we directly forward incoming audio to the viewers without transcoding.
+	 */
+	@Value("${audioBitrateSFU:96000}")
+	private int audioBitrateSFU = 96000;
+
+	/**
+	 * Enable/disable dash recording
+	 */
+	@Value("${dashMuxingEnabled:false}")
+	private boolean dashMuxingEnabled;
+
+	/**
+	 * If aacEncodingEnabled is true, aac encoding will be active even if mp4 or hls muxing is not enabled,
+	 * If aacEncodingEnabled is false, aac encoding is only activated if mp4 or hls muxing is enabled in the settings,
+	 *
+	 * This value should be true if you're sending stream to RTMP endpoints or enable/disable mp4 recording on the fly
+	 */
+	@Value("${aacEncodingEnabled:true}")
+	private boolean aacEncodingEnabled = true;
+
+	/**
+	 * GOP size, AKA key frame interval,
+	 * GOP size is group of pictures that encoder sends key frame for each group,
+	 * The unit is not the seconds, Please don't confuse the seconds that are used in key frame intervals
+	 *
+	 * If GOP size is 50 and your frame rate is 25, it means that encoder will send key frame 
+	 * for every 2 seconds,
+	 *
+	 * Default value is 0 so it uses incoming gop size by default.
+	 *
+	 */
+	@Value("${gopSize:0}")
+	private int gopSize;
+
+	/**
+	 * Application level WebRTC viewer limit
+	 */
+	@Value("${webRTCViewerLimit:-1}")
+	private int webRTCViewerLimit = -1;
+
+	public static final String APPLICATION_STATUS_INSTALLING = "installing";
+	public static final String APPLICATION_STATUS_INSTALLED = "installed";
+	public static final String APPLICATION_STATUS_DELETED = "deleted";
+	public static final String APPLICATION_STATUS_INSTALLATION_FAILED = "installationFailed";
+
+
+
+	/**
+	 * Describes the application installation status. Possible values:
+	 *
+	 * Installing: App install Rest method received by host node
+	 * Installed: App installation completed on host node
+	 * Installation Failed: App installation can not be completed by host node
+	 * Deleted: App installation deleted on host node
+	 */
+	private String appStatus = APPLICATION_STATUS_INSTALLED;
+
+	/**
+	 * The time when the application is installed
+	 */
+	private long appInstallationTime = 0;
+
+	/**
+	 * Set to true when the app settings are only created for pulling the war file.
+	 */
+	private boolean pullWarFile = false;
+
+	/**
+	 * Address of the original place of the war file.
+	 */
+	private String warFileOriginServerAddress = "";
+
+
+	/**
+	 * Application JWT secret key for accessing the REST API
+	 */
+	@Value("${jwtSecretKey:}")
+	private String jwtSecretKey = "";
+
+	/**
+	 * Application JWT Control Enabled for accessing the REST API
+	 * TODO: Remove this field. Just check if jwtSecretKey is not empty then it means jwt filter is enabled
+	 */
+	@Value("${jwtControlEnabled:false}")
+	private boolean jwtControlEnabled;
+
+	/**
+	 * Application IP Filter Enabled
+	 */
+	@Value("${ipFilterEnabled:true}")
+	private boolean ipFilterEnabled = true;
+
+	/**
+	 * Application level total incoming stream limit
+	 */
+	@Value("${ingestingStreamLimit:-1}")
+	private int ingestingStreamLimit = -1;
+
+	/**
+	 * WebRTC Keyframe Time, Ant Media Server asks key frame for every webRTCKeyframeTime in SFU mode,
+	 * It's in milliseconds
+	 */
+	@Value("${webRTCKeyframeTime:2000}")
+	private int webRTCKeyframeTime=2000;
+
+	/**
+	 * Application JWT stream secret key. Provide 32 character or more in length
+	 */
+	@Value("${jwtStreamSecretKey:}")
+	private String jwtStreamSecretKey = "";
+
+	/**
+	 * The settings for enabling jwt token filter mechanism for accessing resources and publishing
+	 */
+	@Value( "${publishJwtControlEnabled:false}" )
+	private boolean publishJwtControlEnabled;
+
+	/**
+	 * The settings for enabling jwt token filter mechanism for accessing resources and playing
+	 */
+	@Value( "${playJwtControlEnabled:false}" )
+	private boolean playJwtControlEnabled;
+
+	/**
+	 * Use http streaming in Low Latency Dash,
+	 * If it's true, it sends files through http
+	 * If it's false, it writes files to disk directly
+	 *
+	 * In order to have Low Latency http streaming should be used
+	 */
+	@Value( "${dashHttpStreaming:true}" )
+	private boolean dashHttpStreaming=true;
+
+	/**
+	 * Configures the sub folder path for storing media files.
+	 * This setting is appended to s3StreamsFolderPath in case of S3 upload.
+	 * For instance if s3StreamsFolderPath is "streams"(default value) and subFolder is "someRoom", files will appear as
+	 * streams/someRoom/0001.ts
+	 *
+	 * Path configuration supports dynamic placeholders for files:
+	 * - '%m': Replaces with main track ID if exists
+	 * - '%s': Replaces with stream ID
+	 *
+	 * This is particularly useful for storing conference participant stream HLS recordings in separate folders.
+	 *
+	 * Examples of path configurations in S3 assuming s3StreamsFolderPath is "streams":
+	 * - "" (default)                  → Basic folder → streams/0001.ts
+	 * - "%m"                                 → Use main track ID as sub folder  → streams/mainTrackId/0001.ts
+	 * - "myStreams/%m/%s"                      → Nested folders with track and stream IDs → streams/myStreams/mainTrackId/streamId/0001.ts
+	 * - "conference/videos/%m/%s"            → Custom path with prefixes → streams/conference/videos/mainTrackId/streamId/0001.ts
+	 *
+	 * If main track ID or stream ID are null, they are omitted.
+	 */
+	@Value( "${subFolder:}" )
+	private String subFolder = "";
+
+	/**
+	 * It's S3 streams MP4, WEBM  and HLS files storage name.
+	 * It's streams by default.
+	 *
+	 */
+	@Value( "${s3StreamsFolderPath:streams}" )
+	private String s3StreamsFolderPath="streams";
+
+	/**
+	 * It's S3 stream PNG files storage name.
+	 * It's previews by default.
+	 *
+	 */
+	@Value("${s3PreviewsFolderPath:previews}")
+	private String s3PreviewsFolderPath="previews";
+
+	/*
+	 * Use http endpoint  in CMAF/HLS.
+	 * It's configurable to send any stream in HTTP Endpoint with this option
+	 */
+	@Value("${dashHttpEndpoint:}")
+	private String dashHttpEndpoint = "";
+
+	/**
+	 * Http endpoint to push the HLS stream
+	 */
+	@Value("${hlsHttpEndpoint:}")
+	private String hlsHttpEndpoint = "";
+
+	/**
+	 * Force stream decoding even if there is no adaptive setting
+	 */
+	@Value("${forceDecoding:false}")
+	private boolean forceDecoding;
+
+	/**
+	 * Add the original hls stream to the playlist if adaptive bitrate setting is enabled
+	 */
+	@Value("${addOriginalMuxerIntoHLSPlaylist:true}")
+	private boolean addOriginalMuxerIntoHLSPlaylist = true;
+
+	/**
+	 * Application JWT Control Enabled
+	 */
+	@Value("${s3RecordingEnabled:false}")
+	private boolean s3RecordingEnabled;
+
+	/**
+	 * S3 Access key
+	 */
+	@Value("${s3AccessKey:}")
+	private String s3AccessKey = "";
+
+	/**
+	 * S3 Secret Key
+	 */
+	@Value("${s3SecretKey:}")
+	private String s3SecretKey = "";
+
+	/**
+	 * S3 Bucket Name
+	 */
+	@Value("${s3BucketName:}")
+	private String s3BucketName = "";
+
+	/**
+	 * S3 Region Name
+	 */
+	@Value("${s3RegionName:}")
+	private String s3RegionName = "";
+
+	/**
+	 * S3 Endpoint
+	 */
+	@Value("${s3Endpoint:}")
+	private String s3Endpoint = "";
+
+	/**
+	 * S3 Cache Control Metadata
+	 */
+	@Value("${s3CacheControl:no-store, no-cache, must-revalidate, max-age=0}")
+	private String s3CacheControl = "no-store, no-cache, must-revalidate, max-age=0";
+
+
+	/**
+	 * S3 Path Syle Access Enabled
+	 */
+	@Value("${s3PathStyleAccessEnabled:false}")
+	private boolean s3PathStyleAccessEnabled = false;
+
+	/*
+	 * The permission to use in uploading the files to the S3.
+	 * Following values are accepted. Default value is public-read
+	 * public-read
+	 * private
+	 * public-read-write
+	 * authenticated-read
+	 * log-delivery-write
+	 * bucket-owner-read
+	 * bucket-owner-full-control
+	 * aws-exec-read
+	 *
+	 */
+	@Value("${s3Permission:public-read}")
+	private String s3Permission = "public-read";
+	
+	
+	/**
+	 * S3 Transfer Buffer Size
+	 * This describes to buffer size to keep transferring data. It should be
+	 * bigger than ts segment file size for HLS continuous upload.
+	 * Otherwise chunk update may cannot be retried in case of any network break.
+	 */
+	@Value("${s3TransferBufferSizeInBytes:10000000}")
+	private int s3TransferBufferSizeInBytes = 10000000;
+
+
+	/**
+	 *  HLS Encryption key info file full path.
+	 *  Format of the file
+	 *  ```
+	 *  key URI
+	 *  key file path
+	 *  IV (optional)
+	 *  ``
+	 *
+	 *  The first line of key_info_file specifies the key URI written to the playlist. 
+	 *  The key URL is used to access the encryption key during playback. 
+	 *  The second line specifies the path to the key file used to obtain the key during the encryption process. 
+	 *  The key file is read as a single packed array of 16 octets in binary format. 
+	 *  The optional third line specifies the initialization vector (IV) as a hexadecimal string to be used 
+	 *  instead of the segment sequence number (default) for encryption. 
+	 *
+	 *  Changes to key_info_file will result in segment encryption with the new key/IV and an entry in the playlist for the new key URI/IV if hls_flags periodic_rekey is enabled.
+	 *
+	 *  Key info file example:
+	 *  ```
+	 *  http://server/file.key
+	 *  /path/to/file.key
+	 *  0123456789ABCDEF0123456789ABCDEF
+	 *  ```
+	 */
+	@Value("${hlsEncryptionKeyInfoFile:}")
+	private String hlsEncryptionKeyInfoFile = "";
+
+	/*
+	 * JWKS URL - it's effective if {@link#jwtControlEnabled} is true
+	 *
+	 * It's null by default. If it's not null, JWKS is used to filter.
+	 * Otherwise it uses JWT
+	 */
+
+	@Value("${jwksURL:}")
+	private String jwksURL = "";
+
+	/**
+	 * This settings forces the aspect ratio to match the incoming aspect ratio perfectly.
+	 * For instance, if the incoming source is 1280x720 and there is an adaptive bitrate with 480p
+	 * There is no integer value that makes this equation true 1280/720 = x/480 -> x = 853.333
+	 *
+	 *
+	 * So Ant Media Server can change the video height to match the aspect ratio perfectly. 
+	 * This is critical when there are multi-bitrates in the dash streaming. 
+	 * Because dash requires perfect match of aspect ratios of all streams
+	 *
+	 * The disadvantage of this approach is that there may be have some uncommon resolutions at the result of the transcoding.
+	 * So that default value is false
+	 *
+	 */
+	@Value("${forceAspectRatioInTranscoding:false}")
+	private boolean forceAspectRatioInTranscoding;
+
+	/**
+	 * Enable Webhook Authentication when publishing streams
+	 */
+	@Value("${webhookAuthenticateURL:}")
+	private String webhookAuthenticateURL = "";
+
+	/**
+	 * The maximum audio track in a multitrack playing connection
+	 * If it is -1 then a new audio track connection is established for each track
+	 * otherwise, audio connections are established as many as this value and
+	 * the limited connections are shared between tracks.
+	 */
+	@Value("${maxAudioTrackCount:-1}")
+	private int maxAudioTrackCount = -1;
+
+
+	/**
+	 * The maximum video track in a multitrack playing connection
+	 * If it is -1 then a new video track connection is established for each track
+	 * otherwise, video connections are established as many as this value and
+	 * the limited connections are shared between tracks.
+	 */
+	@Value("${maxVideoTrackCount:-1}")
+	private int maxVideoTrackCount = -1;
+
+
+	/**
+	 * This is a script file path that is called by Runtime when VoD upload is finished,
+	 * Bash script file path will be called after upload process finishes.
+	 */
+	@Value("${vodUploadFinishScript:}")
+	private String vodUploadFinishScript = "";
+
+	/**
+	 * Value of the content security policy header(csp) 
+	 * The new Content-Security-Policy HTTP response header helps you reduce XSS risks 
+	 * on modern browsers by declaring which dynamic resources are allowed to load.
+	 *
+	 * https://content-security-policy.com/
+	 */
+	@Value("${contentSecurityPolicyHeaderValue:}")
+	private String contentSecurityPolicyHeaderValue = "";
+
+	/**
+	 * RTMP playback is not maintained and its support will be removed completely.
+	 * It also causes some stability issues on the server side. 
+	 * We highly recommend users to use CMAF(DASH) instead of RTMP playback 
+	 */
+	@Value("${rtmpPlaybackEnabled:false}")
+	private boolean rtmpPlaybackEnabled = false;
+
+
+	/**
+	 * The maximum idle time between origin and edge connection.
+	 * After this timeout connection will be re-established if
+	 * the stream is still active on origin.
+	 */
+	@Value("${originEdgeConnectionIdleTimeout:2}")
+	private int originEdgeIdleTimeout = 2;
+
+	/**
+	 * It's mandatory, Date and time are added to created .m3u8 and .ts file name, Default value is false
+	 */
+	@Value("${addDateTimeToHlsFileName:false}")
+	private boolean addDateTimeToHlsFileName;
+
+	/**
+	 * This setting prevents playing stream id more than once in the same websocket/webrtc session. 
+	 * If it is true, trying to play stream id more than once in the same websocket session will produce 'already playing' error
+	 * Default value is true.
+	 * It uses session id to match subscriber
+	 */
+	@Value("${playWebRTCStreamOnceForEachSession:true}")
+	private boolean playWebRTCStreamOnceForEachSession = true;
+
+	public boolean isWriteStatsToDatastore() {
+		return writeStatsToDatastore;
+	}
+
+
+	/**
+	 * Enables the WebRTC statistics based Adaptive Bitrate switch algorithm
+	 */
+	@Value("${statsBasedABRAlgorithmEnabled:true}")
+	private boolean statsBasedABREnabled = true;
+
+	/**
+	 * Packet lost percentage to decide serving video with lower resolution
+	 */
+	@Value("${abrDownScalePacketLostRatio:1}")
+	private float abrDownScalePacketLostRatio = 1;
+
+	/**
+	 * Packet lost percentage to decide serving video with higher resolution
+	 */
+	@Value("${abrUpScalePacketLostRatio:0.1f}")
+	private float abrUpScalePacketLostRatio = 0.1f;
+
+	/**
+	 * Round trip time in ms to decide serving video with higher resolution
+	 */
+	@Value("${abrUpScaleRTTMs:150}")
+	private int abrUpScaleRTTMs = 150;
+
+	/**
+	 * Jitter in ms to decide serving video with higher resolution
+	 */
+	@Value("${abrUpScaleJitterMs:30}")
+	private int abrUpScaleJitterMs = 30;
+
+	/**
+	 * Key that is being used to validate the requests between communication in the cluster nodes
+	 *
+	 * In initialization no matter if spring or field definition is effective, the important thing is that having some random value
+	 */
+	@Value("${clusterCommunicationKey:#{ T(org.apache.commons.lang3.RandomStringUtils).randomAlphanumeric(32)}}")
+	private String clusterCommunicationKey = RandomStringUtils.randomAlphanumeric(32);
+
+	/**
+	 * Enables the ID3 Tag support for HLS
+	 */
+	@Value("${id3TagEnabled:false}")
+	private boolean id3TagEnabled = false;
+
+	/**
+	 * Ant Media Server can get the audio level from incoming RTP Header in WebRTC streaming and send to the viewers.
+	 * It's very useful in video conferencing to detect if user speaks.
+	 * Ant Media Server sends audio level through webrtc data channel with JSON format
+	 * {
+	 *  "streamId":${streamId},
+	 *  "eventType": "UPDATE_AUDIO_LEVEL",
+	 *  "audioLevel": ${audioLevel},
+	 *  "command": "event"
+	 * }
+	 *
+	 * ${streamId} is the id of the stream that this messages carries its audio level
+	 * ${audioLevel} is the audio level of the stream. It's between 0 and 127. If it's 0, it means audio level is max. 
+	 * If it's 127, it means it's audio level is min.  
+	 *
+	 * Ant Media Server sends audio level 5 times in a second
+	 */
+	@Value("${sendAudioLevelToViewers:false}")
+	private boolean sendAudioLevelToViewers = false;
+	
+	/**
+	 *  
+	 * Audio level threshold to assign an audio track to stream in case of limited audio tracks in conference.
+	 * 127 is the max value which is silent. 0 is the min value which is max audio level.
+	 * 
+	 */
+	@Value("${audioLevelThreshold:120}")
+	private int audioLevelThreshold = 120;
+
+	/**
+	 * Enable/disable video frame scaling in GPU when there is an adaptive bitrate.
+	 * It's disabled by default. If you want to use this feature, ask from Ant Media Support to have the build that supports this feature - mekya
+	 */
+	@Value("${hwScalingEnabled:false}")
+	private boolean hwScalingEnabled = false;
+
+	/**
+	 * Enable hardware-accelerated video decoding (h264_cuvid on NVIDIA GPUs).
+	 * When disabled, the software decoder is used instead.
+	 * Disable this if you experience PTS or stuttering issues with h264_cuvid on certain GPU architectures (e.g. Blackwell RTX 5000 series).
+	 * Default value is true.
+	 */
+	@Value("${hwDecoderEnabled:true}")
+	private boolean hwDecoderEnabled = true;
+
+	/**
+	 * Firebase Service Account Key JSON to send push notification
+	 * through Firebase Cloud Messaging
+	 */
+	@Value("${firebaseAccountKeyJSON:#{null}}")
+	private String firebaseAccountKeyJSON = null;
+
+	/**
+	 * This is JWT Secret to authenticate the user for push notifications.
+	 *
+	 * JWT token should be generated with the following secret: subscriberId(username, email, etc.) + subscriberAuthenticationKey
+	 *
+	 */
+	@Value("${subscriberAuthenticationKey:#{ T(org.apache.commons.lang3.RandomStringUtils).randomAlphanumeric(32)}}")
+	private String subscriberAuthenticationKey = RandomStringUtils.randomAlphanumeric(32);
+
+
+
+	/**
+	 * (Apple Push Notification) Apple Push Notification Server
+	 *  Default value is development enviroment(api.sandbox.push.apple.com) and production enviroment is api.push.apple.com
+	 */
+	@Value("${apnsServer:api.sandbox.push.apple.com}")
+	private String apnsServer = "api.sandbox.push.apple.com";
+
+	/**
+	 * APN(Apple Push Notification) team id
+	 */
+	@Value("${apnTeamId:#{null}}")
+	private String apnTeamId;
+
+	/**
+	 * APN(Apple Push Notification) private key
+	 */
+	@Value("${apnPrivateKey:#{null}}")
+	private String apnPrivateKey;
+
+	/**
+	 * APN(Apple Push Notification) key Id
+	 */
+	@Value("${apnKeyId:#{null}}")
+	private String apnKeyId;
+
+	/**
+	 * Retry count on webhook POST failure
+	 */
+	@Value("${webhookRetryCount:0}")
+	private int webhookRetryCount = 0;
+
+	/**
+	 * If it's false, jwt token should be send in analytic events to the AnalyticsEventLogger.
+	 * It uses {@link AppSettings#jwtSecretKey} for the secret key
+	 */
+	@Value("${secureAnalyticEndpoint:false}")
+	private boolean secureAnalyticEndpoint = false;
+
+	/**
+	 * Delay in milliseconds between webhook attempts on POST failure.
+	 */
+	@Value("${webhookRetryAttemptDelay:1000}")
+	private long webhookRetryDelay = 1000;
+	
+	/**
+	 * The period that server send stream status to the webhook
+	 * Default value is -1 which means disabled. 
+	 * 
+	 * Consume the webhook as soon as possible and don't make it wait.
+	 * 
+	 * Min recommended value is 5000 ms which means 5 seconds
+	 */
+	@Value("${webhookStreamStatusUpdatePeriodMs:-1}")
+	private long webhookStreamStatusUpdatePeriodMs = -1;
+
+	/**
+	 * Webhook webrtc play authentication url.
+	 */
+	@Value("${webhookPlayAuthUrl:}")
+	private String webhookPlayAuthUrl = "";
+
+	/**
+	 * Subfolder for the recording files (mp4 and webm)
+	 */
+	@Value("${recordingSubfolder:#{null}}")
+	private String recordingSubfolder;
+
+
+	/**
+	 * The content type that is used in the webhook POST request
+	 * It's added for backward compatibility. Default value is application/json.
+	 *
+	 * Older version is using application/x-www-form-urlencoded as content type. 
+	 * If you don't want to change the content type, you can set this value to application/x-www-form-urlencoded     
+	 */
+	@Value("${webhookContentType:#{ T(org.apache.http.entity.ContentType).APPLICATION_JSON.getMimeType() }}")
+	private String webhookContentType = ContentType.APPLICATION_JSON.getMimeType();
+
+	/*
+	 * The timeout in milliseconds for the ICE gathering process in WebRTC
+	 * It's used especially in whip ingestion to return candidates in a short time
+	 */
+	@Value("${iceGatheringTimeoutMs:2000}")
+	private long iceGatheringTimeoutMs = 2000;
+
+	/**
+	 * Participant Visibility Matrix for WebRTC Clients. These are roles and each role can see the roles in this list
+	
+	 */
+	@Value("${participantVisibilityMatrix:"+ DEFAULT_VISIBILITY_MATRIX +"}")
+	private Map<String, List<String>> participantVisibilityMatrix;
+
+
+	@Value("${customSettings:{}}")
+	private Map<String, Object> customSettings = new HashMap<>();
+
+	/**
+	 * Relay RTMP metadata to muxers. It's true by default
+	 * RTMP can have metadata and it can be used for playback synchronization.
+	 *
+	 * If it's true, Ant Media Server relays the metadata to muxers. 
+	 * Currently, HLSMuxer supports this feature through {@link Muxer#writeMetaData(String, long)}
+	 */
+	@Value("${relayRTMPMetaDataToMuxers:true}")
+	private boolean relayRTMPMetaDataToMuxers = true;
+
+	/**
+	 * Drop webrtc ingest if no packet received. It's false by default because video or audio may be disabled in the stream
+	 * It checks the audio/video packets in the WebRTC ingest stream. 
+	 * If no audio or no video packets are received in the {@link #webRTCClientStartTimeoutMs}, it drops the stream.
+	 *
+	 */
+	@Value("${dropWebRTCIngestIfNoPacketReceived:false}")
+	private boolean dropWebRTCIngestIfNoPacketReceived = false;
+
+	/**
+	 * The time in milliseconds to wait for the SRT packets to be received
+	 * check for details: https://github.com/Haivision/srt/blob/master/docs/API/API-socket-options.md#SRTO_RCVLATENCY
+	 */
+	@Value("${srtReceiveLatencyInMs:150}")
+	private int srtReceiveLatencyInMs = 150;
+
+	/**
+	 * The size of encoding queue to keep the frames waiting for encoding in Stream Adaptor
+	 * default: 150 (5 seconds frame for 30 fps stream)
+	 */
+	@Value("${encodingQueueSize:150}")
+	private int encodingQueueSize = 150;
+	
+	/**
+	 * Write subscriber events to datastore. It's false by default
+	 * Subscriber events are when they are connected/disconnected. Alternatively, you can get these events from analytics logs by default
+	 */
+	@Value("${writeSubscriberEventsToDatastore:false}")
+	private boolean writeSubscriberEventsToDatastore = false;
+
+	/**
+	 * Disable audio for the entire app. When true, ingested audio is dropped at
+	 * the source and the pipeline runs video-only. 
+	 * This will improve startup time and cpu performance when audio is not needed.
+	 */
+	@Value("${disableAudio:false}")
+	private boolean disableAudio = false;
+
+	//Make sure you have a default constructor because it's populated by MongoDB
+	public AppSettings() {
+		try {
+			this.participantVisibilityMatrix = (Map) new JSONParser().parse(DEFAULT_VISIBILITY_MATRIX);
+		} catch (ParseException e) {
+			logger.error(ExceptionUtils.getStackTrace(e));
+		}
+	}
+
+	public Object getCustomSetting(String key) {
+		return	customSettings.get(key);
+	}
+
+	public void setCustomSetting(String key, Object value) {
+		customSettings.put(key, value);
+	}
+
+	public void setWriteStatsToDatastore(boolean writeStatsToDatastore) {
+		this.writeStatsToDatastore = writeStatsToDatastore;
+	}
+
+	public boolean isAddDateTimeToMp4FileName() {
+		return addDateTimeToMp4FileName;
+	}
+
+	public void setAddDateTimeToMp4FileName(boolean addDateTimeToMp4FileName) {
+		this.addDateTimeToMp4FileName = addDateTimeToMp4FileName;
+	}
+
+	public boolean isMp4MuxingEnabled() {
+		return mp4MuxingEnabled;
+	}
+
+	public void setMp4MuxingEnabled(boolean mp4MuxingEnabled) {
+		this.mp4MuxingEnabled = mp4MuxingEnabled;
+	}
+
+	public void setFileNameFormat(String fileNameFormat) {
+		this.fileNameFormat = fileNameFormat;
+	}
+	public String getFileNameFormat() {
+		return fileNameFormat;
+	}
+
+	public boolean isHlsMuxingEnabled() {
+		return hlsMuxingEnabled;
+	}
+
+	public void setHlsMuxingEnabled(boolean hlsMuxingEnabled) {
+		this.hlsMuxingEnabled = hlsMuxingEnabled;
+	}
+
+	public boolean isDashMuxingEnabled() {
+		return dashMuxingEnabled;
+	}
+
+	public void setSignalingEnabled(boolean signalingEnabled){
+		this.signalingEnabled = signalingEnabled;
+	}
+
+	public boolean isSignalingEnabled(){
+		return signalingEnabled;
+	}
+
+	public void setSignalingAddress(String signalingAddress){
+		this.signalingAddress = signalingAddress;
+	}
+	public String getSignalingAddress(){
+		return signalingAddress;
+	}
+
+	public void setDashMuxingEnabled(boolean dashMuxingEnabled) {
+		this.dashMuxingEnabled = dashMuxingEnabled;
+	}
+
+	public int getEndpointRepublishLimit(){
+		return endpointRepublishLimit;
+	}
+	public void setEndpointRepublishLimit(int endpointRepublishLimit){
+		this.endpointRepublishLimit = endpointRepublishLimit;
+	}
+	public int getEndpointHealthCheckPeriodMs(){
+		return endpointHealthCheckPeriodMs;
+	}
+	public void setEndpointHealthCheckPeriodMs(int endpointHealthCheckPeriodMs){
+		this.endpointHealthCheckPeriodMs = endpointHealthCheckPeriodMs;
+	}
+
+	public String getHlsPlayListType() {
+		return hlsPlayListType;
+	}
+
+	public void setHlsPlayListType(String hlsPlayListType) {
+		this.hlsPlayListType = hlsPlayListType;
+	}
+
+	public void setUploadExtensionsToS3(int uploadExtensionsToS3){
+		this.uploadExtensionsToS3 = uploadExtensionsToS3;
+	}
+
+	public int getUploadExtensionsToS3(){
+		return this.uploadExtensionsToS3;
+	}
+
+	public void setS3StorageClass(String s3StorageClass){
+		this.s3StorageClass = s3StorageClass;
+	}
+	public String getS3StorageClass(){
+		return this.s3StorageClass;
+	}
+
+	public String getHlsTime() {
+		return hlsTime;
+	}
+
+	public void setHlsTime(String hlsTime) {
+		this.hlsTime = hlsTime;
+	}
+
+	public String getHlsListSize() {
+		return hlsListSize;
+	}
+
+	public void setHlsListSize(String hlsListSize) {
+		this.hlsListSize = hlsListSize;
+	}
+
+	public boolean isWebRTCEnabled() {
+		return webRTCEnabled;
+	}
+
+	public void setWebRTCEnabled(boolean webRTCEnabled) {
+		this.webRTCEnabled = webRTCEnabled;
+	}
+
+
+
+	public static String encodersList2Str(List<EncoderSettings> encoderSettingsList)
+	{
+		if(encoderSettingsList == null) {
+			return "";
+		}
+
+		JSONArray jsonArray = new JSONArray();
+
+		for (EncoderSettings encoderSettings : encoderSettingsList) {
+			JSONObject encoderJSON = new JSONObject();
+			encoderJSON.put(EncoderSettings.RESOLUTION_HEIGHT, encoderSettings.getHeight());
+			encoderJSON.put(EncoderSettings.VIDEO_BITRATE, encoderSettings.getVideoBitrate());
+			encoderJSON.put(EncoderSettings.AUDIO_BITRATE, encoderSettings.getAudioBitrate());
+			encoderJSON.put(EncoderSettings.FORCE_ENCODE, encoderSettings.isForceEncode());
+			encoderJSON.put(EncoderSettings.FORCE_SAME_RESOLUTION_ENCODE, encoderSettings.isForceSameResolutionEncode());
+			jsonArray.add(encoderJSON);
+		}
+		return jsonArray.toJSONString();
+	}
+
+	public static List<EncoderSettings> encodersStr2List(String encoderSettingsString)  {
+		if(encoderSettingsString == null) {
+			return null;
+		}
+
+		int height;
+		int videoBitrate;
+		int audioBitrate;
+		boolean forceEncode;
+		boolean forceSameResolutionEncode;
+
+		List<EncoderSettings> encoderSettingsList = new ArrayList<>();
+
+		try {
+			JSONParser jsonParser = new JSONParser();
+			JSONArray jsonArray = (JSONArray) jsonParser.parse(encoderSettingsString);
+			JSONObject jsObject;
+
+			for (int i = 0; i < jsonArray.size(); i++) {
+				jsObject =  (JSONObject)jsonArray.get(i);
+				height = Integer.parseInt(jsObject.get(EncoderSettings.RESOLUTION_HEIGHT).toString());
+				videoBitrate = Integer.parseInt(jsObject.get(EncoderSettings.VIDEO_BITRATE).toString());
+				audioBitrate = Integer.parseInt(jsObject.get(EncoderSettings.AUDIO_BITRATE).toString());
+				forceEncode = getBooleanValue(jsObject, EncoderSettings.FORCE_ENCODE, true);
+				forceSameResolutionEncode = getBooleanValue(jsObject, EncoderSettings.FORCE_SAME_RESOLUTION_ENCODE, false);
+				encoderSettingsList.add(new EncoderSettings(height,videoBitrate,audioBitrate,forceEncode, forceSameResolutionEncode));
+			}
+		}
+		catch (ParseException e) {
+			// If there is old format, then try to add encoderSettingsList
+			String[] values = encoderSettingsString.split(",");
+
+			if (values.length >= 3){
+				for (int i = 0; i < values.length; i++) {
+					height = Integer.parseInt(values[i]);
+					i++;
+					videoBitrate = Integer.parseInt(values[i]);
+					i++;
+					audioBitrate = Integer.parseInt(values[i]);
+					encoderSettingsList.add(new EncoderSettings(height, videoBitrate, audioBitrate,true));
+				}
+			}
+		}
+		return encoderSettingsList;
+	}
+
+	private static boolean getBooleanValue(JSONObject jsObject, String key, boolean defaultValue) {
+		Object value = jsObject.get(key);
+		return value instanceof Boolean ? (Boolean) value : defaultValue;
+	}
+
+	public String getEncoderSettingsString() {
+		return encoderSettingsString;
+	}
+
+	public List<EncoderSettings> getEncoderSettings() {
+		return encodersStr2List(encoderSettingsString);
+	}
+
+	public void setEncoderSettings(List<EncoderSettings> settings) {
+		encoderSettingsString = encodersList2Str(settings);
+	}
+
+	public void setEncoderSettingsString(String encoderSettingsString) {
+		this.encoderSettingsString = encoderSettingsString;
+	}
+
+	public boolean isDeleteHLSFilesOnEnded() {
+		return deleteHLSFilesOnEnded;
+	}
+
+	public void setDeleteHLSFilesOnEnded(boolean deleteHLSFilesOnEnded) {
+		this.deleteHLSFilesOnEnded = deleteHLSFilesOnEnded;
+	}
+
+	public String getListenerHookURL() {
+		return listenerHookURL;
+	}
+
+	public void setListenerHookURL(String listenerHookURL) {
+		this.listenerHookURL = listenerHookURL;
+	}
+
+	public boolean isAcceptOnlyStreamsInDataStore() {
+		return acceptOnlyStreamsInDataStore;
+	}
+
+	public void setAcceptOnlyStreamsInDataStore(boolean acceptOnlyStreamsInDataStore) {
+		this.acceptOnlyStreamsInDataStore = acceptOnlyStreamsInDataStore;
+	}
+
+	public boolean isAcceptOnlyRoomsInDataStore() {
+		return acceptOnlyRoomsInDataStore;
+	}
+
+	public void setAcceptOnlyRoomsInDataStore(boolean acceptOnlyRoomsInDataStore) {
+		this.acceptOnlyRoomsInDataStore = acceptOnlyRoomsInDataStore;
+	}
+
+	public int getCreatePreviewPeriod() {
+		return createPreviewPeriod;
+	}
+
+	public void setCreatePreviewPeriod(int period) {
+		this.createPreviewPeriod = period;
+	}
+
+	public boolean isPreviewOverwrite() {
+		return previewOverwrite;
+	}
+
+	public void setPreviewOverwrite(boolean previewOverwrite) {
+		this.previewOverwrite = previewOverwrite;
+	}
+
+	public int getRestartStreamFetcherPeriod() {
+		return this.restartStreamFetcherPeriod ;
+	}
+
+	public void setRestartStreamFetcherPeriod(int restartStreamFetcherPeriod) {
+		this.restartStreamFetcherPeriod = restartStreamFetcherPeriod;
+	}
+
+	public int getStreamFetcherBufferTime() {
+		return streamFetcherBufferTime;
+	}
+
+	public void setStreamFetcherBufferTime(int streamFetcherBufferTime) {
+		this.streamFetcherBufferTime = streamFetcherBufferTime;
+	}
+
+	public String getHlsflags() {
+		return hlsflags;
+	}
+
+	public void setHlsflags(String hlsflags) {
+		this.hlsflags = hlsflags;
+	}
+
+	public String getMySqlClientPath() {
+		return this.mySqlClientPath;
+
+	}
+
+	public void setMySqlClientPath(String mySqlClientPath) {
+		this.mySqlClientPath = mySqlClientPath;
+	}
+
+
+	public boolean isPublishTokenControlEnabled() {
+		return publishTokenControlEnabled;
+	}
+
+	public void setPublishTokenControlEnabled(boolean publishTokenControlEnabled) {
+		this.publishTokenControlEnabled = publishTokenControlEnabled;
+	}
+
+	public boolean isPlayTokenControlEnabled() {
+		return playTokenControlEnabled;
+	}
+
+	public void setPlayTokenControlEnabled(boolean playTokenControlEnabled) {
+		this.playTokenControlEnabled = playTokenControlEnabled;
+	}
+
+	public boolean isEnableTimeTokenForPlay() {
+		return enableTimeTokenForPlay;
+	}
+
+	public void setEnableTimeTokenForPlay(boolean enableTimeTokenForPlay) {
+		this.enableTimeTokenForPlay = enableTimeTokenForPlay;
+	}
+	public boolean isEnableTimeTokenForPublish() {
+		return enableTimeTokenForPublish;
+	}
+
+	public void setEnableTimeTokenForPublish(boolean enableTimeTokenForPublish) {
+		this.enableTimeTokenForPublish = enableTimeTokenForPublish;
+	}
+
+	public String getMuxerFinishScript() {
+		return muxerFinishScript;
+	}
+
+	public void setMuxerFinishScript(String muxerFinishScript) {
+		this.muxerFinishScript = muxerFinishScript;
+	}
+
+	public int getWebRTCFrameRate() {
+		return webRTCFrameRate;
+	}
+
+	public void setWebRTCFrameRate(int webRTCFrameRate) {
+		this.webRTCFrameRate = webRTCFrameRate;
+	}
+
+
+	public String getTokenHashSecret() {
+		return tokenHashSecret;
+	}
+
+	public void setTokenHashSecret(String tokenHashSecret) {
+		this.tokenHashSecret = tokenHashSecret;
+	}
+
+
+	public boolean isHashControlPlayEnabled() {
+		return hashControlPlayEnabled;
+	}
+
+	public void setHashControlPlayEnabled(boolean hashControlPlayEnabled) {
+		this.hashControlPlayEnabled = hashControlPlayEnabled;
+	}
+
+	public boolean isHashControlPublishEnabled() {
+		return hashControlPublishEnabled;
+	}
+
+	public void setHashControlPublishEnabled(boolean hashControlPublishEnabled) {
+		this.hashControlPublishEnabled = hashControlPublishEnabled;
+	}
+
+	public void resetDefaults() {
+		mp4MuxingEnabled = false;
+		addDateTimeToMp4FileName = false;
+		hlsMuxingEnabled = true;
+		hlsListSize = null;
+		hlsTime = null;
+		webRTCEnabled = true;
+		deleteHLSFilesOnEnded = true;
+		deleteDASHFilesOnEnded = true;
+		acceptOnlyStreamsInDataStore = false;
+		publishTokenControlEnabled = false;
+		rtmpPlaybackEnabled = false;
+		playTokenControlEnabled = false;
+		enableTimeTokenForPlay = false;
+		enableTimeTokenForPublish = false;
+		hlsPlayListType = null;
+		previewOverwrite = false;
+		createPreviewPeriod = 5000;
+		restartStreamFetcherPeriod = 0;
+		webRTCFrameRate = 20;
+		hashControlPlayEnabled = false;
+		hashControlPublishEnabled = false;
+		tokenHashSecret = "";
+		encoderSettingsString = "";
+		remoteAllowedCIDR = "127.0.0.1";
+		aacEncodingEnabled=true;
+		ipFilterEnabled=true;
+		ingestingStreamLimit = -1;
+		recordingSubfolder = null;
+	}
+
+	public int getWebRTCPortRangeMax() {
+		return webRTCPortRangeMax;
+	}
+
+	public void setWebRTCPortRangeMax(int webRTCPortRangeMax) {
+		this.webRTCPortRangeMax = webRTCPortRangeMax;
+	}
+
+	public int getWebRTCPortRangeMin() {
+		return webRTCPortRangeMin;
+	}
+
+	public void setWebRTCPortRangeMin(int webRTCPortRangeMin) {
+		this.webRTCPortRangeMin = webRTCPortRangeMin;
+	}
+
+	public String getStunServerURI() {
+		return stunServerURI;
+	}
+
+	public void setStunServerURI(String stunServerURI) {
+		this.stunServerURI = stunServerURI;
+	}
+
+	public boolean isWebRTCTcpCandidatesEnabled() {
+		return webRTCTcpCandidatesEnabled;
+	}
+
+	public void setWebRTCTcpCandidatesEnabled(boolean webRTCTcpCandidatesEnabled) {
+		this.webRTCTcpCandidatesEnabled = webRTCTcpCandidatesEnabled;
+	}
+
+	public String getEncoderName() {
+		return encoderName;
+	}
+
+	public void setEncoderName(String encoderName) {
+		this.encoderName = encoderName;
+	}
+
+	public int getPreviewHeight() {
+		return previewHeight;
+	}
+
+	public void setPreviewHeight(int previewHeight) {
+		this.previewHeight = previewHeight;
+	}
+
+	public boolean isUseOriginalWebRTCEnabled() {
+		return useOriginalWebRTCEnabled;
+	}
+
+	public void setUseOriginalWebRTCEnabled(boolean useOriginalWebRTCEnabled) {
+		this.useOriginalWebRTCEnabled = useOriginalWebRTCEnabled;
+	}
+
+	public synchronized String getRemoteAllowedCIDR() {
+		return remoteAllowedCIDR;
+	}
+
+	/**
+	 * the getAllowedCIDRList and setAllowedCIDRList are synchronized
+	 * because ArrayList may throw concurrent modification
+	 * @param remoteAllowedCIDR
+	 */
+	public synchronized void setRemoteAllowedCIDR(String remoteAllowedCIDR) {
+		this.remoteAllowedCIDR = remoteAllowedCIDR;
+	}
+
+	@JsonIgnore
+	public synchronized Queue<NetMask> getAllowedCIDRList()
+	{
+		Queue<NetMask> allowedCIDRList = new ConcurrentLinkedQueue<>();
+		fillFromInput(remoteAllowedCIDR, allowedCIDRList);
+		return allowedCIDRList;
+	}
+
+	public String getAllowedPublisherCIDR() {
+		return allowedPublisherCIDR;
+	}
+
+	public void setAllowedPublisherCIDR(String allowedPublisherCIDR)
+	{
+		this.allowedPublisherCIDR = allowedPublisherCIDR;
+	}
+
+	@JsonIgnore
+	public synchronized Queue<NetMask> getAllowedPublisherCIDRList()
+	{
+		Queue<NetMask> allowedPublisherCIDRList = new ConcurrentLinkedQueue<>();
+		fillFromInput(allowedPublisherCIDR, allowedPublisherCIDRList);
+		return allowedPublisherCIDRList;
+	}
+
+
+	/**
+	 * Fill a {@link NetMask} list from a string input containing a
+	 * comma-separated list of (hopefully valid) {@link NetMask}s.
+	 *
+	 * @param input The input string
+	 * @param target The list to fill
+	 * @return a string list of processing errors (empty when no errors)
+	 */
+	private List<String> fillFromInput(final String input, final Queue<NetMask> target) {
+		target.clear();
+		if (input == null || input.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		final List<String> messages = new LinkedList<>();
+		NetMask nm;
+
+		for (final String s : input.split("\\s*,\\s*")) {
+			try {
+				nm = new NetMask(s);
+				target.add(nm);
+			} catch (IllegalArgumentException e) {
+				messages.add(s + ": " + e.getMessage());
+			}
+		}
+
+		return Collections.unmodifiableList(messages);
+	}
+
+	public String getEncoderSelectionPreference() {
+		return encoderSelectionPreference;
+	}
+
+	public void setEncoderSelectionPreference(String encoderSelectionPreference) {
+		this.encoderSelectionPreference = encoderSelectionPreference;
+	}
+
+	public int getExcessiveBandwidthCallThreshold() {
+		return excessiveBandwidthCallThreshold;
+	}
+
+	public void setExcessiveBandwidthCallThreshold(int excessiveBandwidthCallThreshold) {
+		this.excessiveBandwidthCallThreshold = excessiveBandwidthCallThreshold;
+	}
+
+	public int getExcessiveBandwidthValue() {
+		return excessiveBandwidthValue;
+	}
+
+	public void setExcessiveBandwidthValue(int excessiveBandwidthValue) {
+		this.excessiveBandwidthValue = excessiveBandwidthValue;
+	}
+
+	public int getPortAllocatorFlags() {
+		return portAllocatorFlags;
+	}
+
+	public void setPortAllocatorFlags(int flags) {
+		this.portAllocatorFlags = flags;
+	}
+
+	public int getExcessiveBandwithTryCountBeforeSwitchback() {
+		return excessiveBandwithTryCountBeforeSwitchback;
+	}
+
+	public boolean isExcessiveBandwidthAlgorithmEnabled() {
+		return excessiveBandwidthAlgorithmEnabled;
+	}
+
+	public int getPacketLossDiffThresholdForSwitchback() {
+		return packetLossDiffThresholdForSwitchback;
+	}
+
+	public int getRttMeasurementDiffThresholdForSwitchback() {
+		return rttMeasurementDiffThresholdForSwitchback;
+	}
+
+	public void setExcessiveBandwithTryCountBeforeSwitchback(int excessiveBandwithTryCountBeforeSwitchback) {
+		this.excessiveBandwithTryCountBeforeSwitchback = excessiveBandwithTryCountBeforeSwitchback;
+	}
+
+	public void setExcessiveBandwidthAlgorithmEnabled(boolean excessiveBandwidthAlgorithmEnabled) {
+		this.excessiveBandwidthAlgorithmEnabled = excessiveBandwidthAlgorithmEnabled;
+	}
+
+	public void setPacketLossDiffThresholdForSwitchback(int packetLossDiffThresholdForSwitchback) {
+		this.packetLossDiffThresholdForSwitchback = packetLossDiffThresholdForSwitchback;
+	}
+
+	public void setRttMeasurementDiffThresholdForSwitchback(int rttMeasurementDiffThresholdForSwitchback) {
+		this.rttMeasurementDiffThresholdForSwitchback = rttMeasurementDiffThresholdForSwitchback;
+	}
+
+	public boolean isReplaceCandidateAddrWithServerAddr() {
+		return this.replaceCandidateAddrWithServerAddr;
+	}
+
+	public void setReplaceCandidateAddrWithServerAddr(boolean replaceCandidateAddrWithServerAddr) {
+		this.replaceCandidateAddrWithServerAddr = replaceCandidateAddrWithServerAddr;
+	}
+
+	public long getUpdateTime() {
+		return updateTime;
+	}
+
+	public void setUpdateTime(long updateTime) {
+		this.updateTime = updateTime;
+	}
+
+	public void setAppName(String appName) {
+		this.appName = appName;
+	}
+
+	public String getAppName() {
+		return appName;
+	}
+
+	public String getHttpForwardingExtension() {
+		return httpForwardingExtension;
+	}
+
+	public void setHttpForwardingExtension(String httpForwardingExtension) {
+		this.httpForwardingExtension = httpForwardingExtension;
+	}
+
+	public String getHttpForwardingBaseURL() {
+		return httpForwardingBaseURL;
+	}
+
+	public void setHttpForwardingBaseURL(String httpForwardingBaseURL) {
+		this.httpForwardingBaseURL = httpForwardingBaseURL;
+	}
+
+	public int getMaxAnalyzeDurationMS() {
+		return maxAnalyzeDurationMS;
+	}
+
+	public void setMaxAnalyzeDurationMS(int maxAnalyzeDurationMS) {
+		this.maxAnalyzeDurationMS = maxAnalyzeDurationMS;
+	}
+
+	public boolean isGeneratePreview() {
+		return generatePreview;
+	}
+
+	public void setGeneratePreview(boolean generatePreview) {
+		this.generatePreview = generatePreview;
+	}
+
+	public boolean isDisableIPv6Candidates() {
+		return disableIPv6Candidates;
+	}
+
+	public void setDisableIPv6Candidates(boolean disableIPv6Candidates) {
+		this.disableIPv6Candidates = disableIPv6Candidates;
+	}
+
+	public String getRtspPullTransportType() {
+		return rtspPullTransportType;
+	}
+
+	public void setRtspPullTransportType(String rtspPullTransportType) {
+		this.rtspPullTransportType = rtspPullTransportType;
+	}
+	public int getRtspTimeoutDurationMs() {
+		return rtspTimeoutDurationMs;
+	}
+
+	public void setRtspTimeoutDurationMs(int rtspTimeoutDurationMs) {
+		this.rtspTimeoutDurationMs = rtspTimeoutDurationMs;
+	}
+
+	public int getMaxResolutionAccept() {
+		return maxResolutionAccept;
+	}
+
+	public void setMaxResolutionAccept(int maxResolutionAccept) {
+		this.maxResolutionAccept = maxResolutionAccept;
+	}
+
+	public boolean isH264Enabled() {
+		return h264Enabled;
+	}
+
+	public void setH264Enabled(boolean h264Enabled) {
+		this.h264Enabled = h264Enabled;
+	}
+
+	public boolean isVp8Enabled() {
+		return vp8Enabled;
+	}
+
+	public void setAv1Enabled(boolean av1Enabled) {
+		this.av1Enabled = av1Enabled;
+	}
+	
+	public boolean isAv1Enabled() {
+		return av1Enabled;
+	}
+
+	public void setVp8Enabled(boolean vp8Enabled) {
+		this.vp8Enabled = vp8Enabled;
+	}
+
+	public boolean isH265Enabled() {
+		return h265Enabled;
+	}
+
+	public void setH265Enabled(boolean h265Enabled) {
+		this.h265Enabled = h265Enabled;
+	}
+
+	public boolean isDataChannelEnabled() {
+		return dataChannelEnabled;
+	}
+
+	public void setDataChannelEnabled(boolean dataChannelEnabled) {
+		this.dataChannelEnabled = dataChannelEnabled;
+	}
+
+	public String getDataChannelPlayerDistribution() {
+		return dataChannelPlayerDistribution;
+	}
+
+	public void setDataChannelPlayerDistribution(String dataChannelPlayerDistribution) {
+		this.dataChannelPlayerDistribution = dataChannelPlayerDistribution;
+	}
+
+	public long getRtmpIngestBufferTimeMs() {
+		return rtmpIngestBufferTimeMs;
+	}
+
+	public void setRtmpIngestBufferTimeMs(long rtmpIngestBufferTimeMs) {
+		this.rtmpIngestBufferTimeMs = rtmpIngestBufferTimeMs;
+	}
+
+
+	public void setDataChannelWebHookURL(String dataChannelWebHookURL) {
+		this.dataChannelWebHookURL = dataChannelWebHookURL;
+	}
+
+	public int getEncoderThreadCount() {
+		return encoderThreadCount;
+	}
+
+	public void setEncoderThreadCount(int encoderThreadCount) {
+		this.encoderThreadCount = encoderThreadCount;
+	}
+
+	public int getEncoderThreadType() {
+		return encoderThreadType;
+	}
+
+	public void setEncoderThreadType(int encoderThreadType) {
+		this.encoderThreadType = encoderThreadType;
+	}
+
+	public int getWebRTCClientStartTimeoutMs() {
+		return webRTCClientStartTimeoutMs;
+	}
+
+	public void setWebRTCClientStartTimeoutMs(int webRTCClientStartTimeout) {
+		this.webRTCClientStartTimeoutMs = webRTCClientStartTimeout;
+	}
+
+	public boolean isWebMMuxingEnabled() {
+		return webMMuxingEnabled;
+	}
+
+	public void setWebMMuxingEnabled(boolean webMMuxingEnabled) {
+		this.webMMuxingEnabled = webMMuxingEnabled;
+	}
+
+	public int getVp8EncoderThreadCount() {
+		return vp8EncoderThreadCount;
+	}
+
+	public void setVp8EncoderThreadCount(int vp8EncoderThreadCount) {
+		this.vp8EncoderThreadCount = vp8EncoderThreadCount;
+	}
+
+	public String getWebRTCSdpSemantics() {
+		return webRTCSdpSemantics;
+	}
+
+	public void setWebRTCSdpSemantics(String webRTCSdpSemantics) {
+		this.webRTCSdpSemantics = webRTCSdpSemantics;
+	}
+
+	public boolean isStartStreamFetcherAutomatically() {
+		return startStreamFetcherAutomatically;
+	}
+
+	public void setStartStreamFetcherAutomatically(boolean startStreamFetcherAutomatically) {
+		this.startStreamFetcherAutomatically = startStreamFetcherAutomatically;
+	}
+
+	public boolean isDeleteDASHFilesOnEnded() {
+		return deleteDASHFilesOnEnded;
+	}
+
+	public void setDeleteDASHFilesOnEnded(boolean deleteDASHFilesOnEnded) {
+		this.deleteDASHFilesOnEnded = deleteDASHFilesOnEnded;
+	}
+
+	public String getTargetLatency() {
+		return targetLatency;
+	}
+
+	public void setTargetLatency(String targetLatency) {
+		this.targetLatency = targetLatency;
+	}
+
+	public int getHeightRtmpForwarding() {
+		return heightRtmpForwarding;
+	}
+
+	public void setHeightRtmpForwarding(int heightRtmpForwarding) {
+		this.heightRtmpForwarding = heightRtmpForwarding;
+	}
+
+	public int getAudioBitrateSFU() {
+		return audioBitrateSFU;
+	}
+
+	public void setAudioBitrateSFU(int audioBitrateSFU) {
+		this.audioBitrateSFU = audioBitrateSFU;
+	}
+
+	public void setAacEncodingEnabled(boolean aacEncodingEnabled){
+		this.aacEncodingEnabled=aacEncodingEnabled;
+	}
+
+	public boolean isAacEncodingEnabled() {
+		return aacEncodingEnabled;
+	}
+
+	public int getGopSize() {
+		return gopSize;
+	}
+
+	public void setGopSize(int gopSize) {
+		this.gopSize = gopSize;
+	}
+
+	public int getWebRTCViewerLimit() {
+		return webRTCViewerLimit;
+	}
+
+	public void setWebRTCViewerLimit(int webRTCViewerLimit) {
+		this.webRTCViewerLimit = webRTCViewerLimit;
+	}
+
+	public String getDashFragmentDuration() {
+		return dashFragmentDuration;
+	}
+
+	public void setDashFragmentDuration(String dashFragmentDuration) {
+		this.dashFragmentDuration = dashFragmentDuration;
+	}
+
+	public String getDashSegDuration() {
+		return dashSegDuration;
+	}
+
+	public void setDashSegDuration(String dashSegDuration) {
+		this.dashSegDuration = dashSegDuration;
+	}
+
+	public String getDashWindowSize() {
+		return dashWindowSize;
+	}
+
+	public void setDashWindowSize(String dashWindowSize) {
+		this.dashWindowSize = dashWindowSize;
+	}
+
+	public String getDashExtraWindowSize() {
+		return dashExtraWindowSize;
+	}
+
+	public void setDashExtraWindowSize(String dashExtraWindowSize) {
+		this.dashExtraWindowSize = dashExtraWindowSize;
+	}
+
+	public String getJwtSecretKey() {
+		return jwtSecretKey;
+	}
+
+	public void setJwtSecretKey(String jwtSecretKey) {
+		this.jwtSecretKey = jwtSecretKey;
+	}
+
+	public boolean isJwtControlEnabled() {
+		return jwtControlEnabled;
+	}
+
+	public void setJwtControlEnabled(boolean jwtControlEnabled) {
+		this.jwtControlEnabled = jwtControlEnabled;
+	}
+
+	public boolean isIpFilterEnabled() {
+		return ipFilterEnabled;
+	}
+
+	public void setIpFilterEnabled(boolean ipFilterEnabled) {
+		this.ipFilterEnabled = ipFilterEnabled;
+	}
+
+	public int getIngestingStreamLimit() {
+		return ingestingStreamLimit;
+	}
+
+	public void setIngestingStreamLimit(int ingestingStreamLimit) {
+		this.ingestingStreamLimit = ingestingStreamLimit;
+	}
+
+	public int getTimeTokenPeriod() {
+		return timeTokenPeriod;
+	}
+
+	public void setTimeTokenPeriod(int timeTokenPeriod) {
+		this.timeTokenPeriod = timeTokenPeriod;
+	}
+
+	public String getAppStatus() {
+		return appStatus;
+	}
+
+	public void setAppStatus(String appStatus) {
+		this.appStatus = appStatus;
+	}
+
+	public boolean isPullWarFile() {
+		return pullWarFile;
+	}
+
+	public void setPullWarFile(boolean pullWarFile) {
+		this.pullWarFile = pullWarFile;
+	}
+
+	public int getWebRTCKeyframeTime() {
+		return webRTCKeyframeTime;
+	}
+
+	public void setWebRTCKeyframeTime(int webRTCKeyframeTime) {
+		this.webRTCKeyframeTime = webRTCKeyframeTime;
+	}
+
+	public String getJwtStreamSecretKey() {
+		return jwtStreamSecretKey;
+	}
+
+	public void setJwtStreamSecretKey(String jwtStreamSecretKey) {
+		this.jwtStreamSecretKey = jwtStreamSecretKey;
+	}
+
+	public boolean isPublishJwtControlEnabled() {
+		return publishJwtControlEnabled;
+	}
+
+	public void setPublishJwtControlEnabled(boolean publishJwtControlEnabled) {
+		this.publishJwtControlEnabled = publishJwtControlEnabled;
+	}
+
+	public boolean isPlayJwtControlEnabled() {
+		return playJwtControlEnabled;
+	}
+
+	public void setPlayJwtControlEnabled(boolean playJwtControlEnabled) {
+		this.playJwtControlEnabled = playJwtControlEnabled;
+	}
+
+	public boolean islLDashEnabled() {
+		return lLDashEnabled;
+	}
+
+	public void setlLDashEnabled(boolean lLDashEnabled) {
+		this.lLDashEnabled = lLDashEnabled;
+	}
+
+	public boolean islLHLSEnabled() {
+		return lLHLSEnabled;
+	}
+
+	public void setlLHLSEnabled(boolean lLHLSEnabled) {
+		this.lLHLSEnabled = lLHLSEnabled;
+	}
+
+	public boolean isHlsEnabledViaDash() {
+		return hlsEnabledViaDash;
+	}
+
+	public void setHlsEnabledViaDash(boolean hlsEnabledViaDash) {
+		this.hlsEnabledViaDash = hlsEnabledViaDash;
+	}
+
+	public boolean isUseTimelineDashMuxing() {
+		return useTimelineDashMuxing;
+	}
+
+	public void setUseTimelineDashMuxing(boolean useTimelineDashMuxing) {
+		this.useTimelineDashMuxing = useTimelineDashMuxing;
+	}
+
+	public boolean isDashHttpStreaming() {
+		return dashHttpStreaming;
+	}
+
+	public void setDashHttpStreaming(boolean dashHttpStreaming) {
+		this.dashHttpStreaming = dashHttpStreaming;
+	}
+
+	public String getS3StreamsFolderPath() {
+		return s3StreamsFolderPath;
+	}
+
+	public String getDashHttpEndpoint() {
+		return dashHttpEndpoint;
+	}
+
+
+	public boolean isS3RecordingEnabled() { return s3RecordingEnabled; }
+
+	public void setS3RecordingEnabled(boolean s3RecordingEnabled) {
+		this.s3RecordingEnabled = s3RecordingEnabled;
+	}
+
+	public String getS3SecretKey() {
+		return s3SecretKey;
+	}
+
+	public void setS3SecretKey(String s3SecretKey) { this.s3SecretKey = s3SecretKey; }
+
+	public String getS3AccessKey() {
+		return s3AccessKey;
+	}
+
+	public void setS3AccessKey(String s3AccessKey) {
+		this.s3AccessKey = s3AccessKey;
+	}
+
+	public String getS3RegionName() {
+		return s3RegionName;
+	}
+
+	public void setS3RegionName(String s3RegionName) {
+		this.s3RegionName = s3RegionName;
+	}
+
+	public String getS3BucketName() {
+		return s3BucketName;
+	}
+
+	public void setS3BucketName(String s3BucketName) {
+		this.s3BucketName = s3BucketName;
+	}
+
+	public String getS3Endpoint() {
+		return s3Endpoint;
+	}
+
+	public void setS3Endpoint(String s3Endpoint) {
+		this.s3Endpoint = s3Endpoint;
+	}
+
+	public String getS3CacheControl() {
+		return s3CacheControl;
+	}
+
+	public void setS3CacheControl(String s3CacheControl) {
+		this.s3CacheControl = s3CacheControl;
+	}
+
+	public boolean isS3PathStyleAccessEnabled() {
+		return s3PathStyleAccessEnabled;
+	}
+
+	public void setS3PathStyleAccessEnabled(boolean s3PathStyleAccessEnabled) {
+		this.s3PathStyleAccessEnabled = s3PathStyleAccessEnabled;
+	}
+
+	public void setDashHttpEndpoint(String dashHttpEndpoint) {
+		this.dashHttpEndpoint = dashHttpEndpoint;
+	}
+
+	public String getHlsEncryptionKeyInfoFile() {
+		return hlsEncryptionKeyInfoFile;
+	}
+
+	public void setHlsEncryptionKeyInfoFile(String hlsEncryptionKeyInfoFile) {
+		this.hlsEncryptionKeyInfoFile = hlsEncryptionKeyInfoFile;
+	}
+
+	public void setS3StreamsFolderPath(String s3StreamsFolderPath) {
+		this.s3StreamsFolderPath = s3StreamsFolderPath;
+	}
+
+	public String getS3PreviewsFolderPath() {
+		return s3PreviewsFolderPath;
+	}
+
+	public void setS3PreviewsFolderPath(String s3PreviewsFolderPath) {
+		this.s3PreviewsFolderPath = s3PreviewsFolderPath;
+	}
+
+	public boolean isForceDecoding() {
+		return forceDecoding;
+	}
+
+	public void setForceDecoding(boolean forceDecoding) {
+		this.forceDecoding = forceDecoding;
+	}
+
+	public boolean isAddOriginalMuxerIntoHLSPlaylist() {
+		return addOriginalMuxerIntoHLSPlaylist;
+	}
+
+	public void setAddOriginalMuxerIntoHLSPlaylist(boolean addOriginalMuxerIntoHLSPlaylist) {
+		this.addOriginalMuxerIntoHLSPlaylist = addOriginalMuxerIntoHLSPlaylist;
+	}
+
+	public String getJwksURL() {
+		return jwksURL;
+	}
+
+	public void setJwksURL(String jwksURL) {
+		this.jwksURL = jwksURL;
+	}
+
+
+	public String getWebhookAuthenticateURL(){
+		return webhookAuthenticateURL;
+	}
+
+	public void setWebhookAuthenticateURL(String webhookAuthenticateURL) {
+		this.webhookAuthenticateURL = webhookAuthenticateURL;
+	}
+
+	public boolean isForceAspectRatioInTranscoding() {
+		return forceAspectRatioInTranscoding;
+	}
+
+	public void setForceAspectRatioInTranscoding(boolean forceAspectRatioInTranscoding) {
+		this.forceAspectRatioInTranscoding = forceAspectRatioInTranscoding;
+
+	}
+
+	public String getS3Permission() {
+		return s3Permission;
+	}
+
+	public void setS3Permission(String s3Permission) {
+		this.s3Permission = s3Permission;
+	}
+
+	public int getMaxAudioTrackCount() {
+		return maxAudioTrackCount;
+	}
+
+	public void setMaxAudioTrackCount(int maxAudioTrackCount) {
+		this.maxAudioTrackCount = maxAudioTrackCount;
+	}
+
+	public String getWarFileOriginServerAddress() {
+		return warFileOriginServerAddress;
+	}
+
+	public void setWarFileOriginServerAddress(String warFileOriginServerAddress) {
+		this.warFileOriginServerAddress = warFileOriginServerAddress;
+	}
+
+
+	public void setVodUploadFinishScript(String vodUploadFinishScript) {
+		this.vodUploadFinishScript = vodUploadFinishScript;
+	}
+
+	public int getMaxVideoTrackCount() {
+		return maxVideoTrackCount;
+	}
+
+	public void setMaxVideoTrackCount(int maxVideoTrackCount) {
+		this.maxVideoTrackCount = maxVideoTrackCount;
+	}
+
+	public String getContentSecurityPolicyHeaderValue() {
+		return contentSecurityPolicyHeaderValue;
+	}
+
+	public void setContentSecurityPolicyHeaderValue(String contentSecurityPolicyHeaderValue) {
+		this.contentSecurityPolicyHeaderValue = contentSecurityPolicyHeaderValue;
+	}
+
+	public String getTurnServerUsername() {
+		return turnServerUsername;
+	}
+
+	public void setTurnServerUsername(String turnServerUsername) {
+		this.turnServerUsername = turnServerUsername;
+	}
+
+	public String getTurnServerCredential() {
+		return turnServerCredential;
+	}
+
+	public void setTurnServerCredential(String turnServerCredential) {
+		this.turnServerCredential = turnServerCredential;
+	}
+
+	public String getHlsHttpEndpoint() {
+		return hlsHttpEndpoint;
+	}
+
+	public void setHlsHttpEndpoint(String hlsHttpEndpoint) {
+		this.hlsHttpEndpoint = hlsHttpEndpoint;
+	}
+
+	public boolean isRtmpPlaybackEnabled() {
+		return rtmpPlaybackEnabled;
+	}
+
+	public void setRtmpPlaybackEnabled(boolean rtmpPlaybackEnabled) {
+		this.rtmpPlaybackEnabled = rtmpPlaybackEnabled;
+	}
+
+	public int getOriginEdgeIdleTimeout() {
+		return originEdgeIdleTimeout;
+	}
+
+	public void setOriginEdgeIdleTimeout(int originEdgeIdleTimeout) {
+		this.originEdgeIdleTimeout = originEdgeIdleTimeout;
+	}
+
+	public boolean isAddDateTimeToHlsFileName() {
+		return addDateTimeToHlsFileName;
+	}
+
+	public void setAddDateTimeToHlsFileName(boolean addDateTimeToHlsFileName) {
+		this.addDateTimeToHlsFileName = addDateTimeToHlsFileName;
+	}
+
+	public boolean isPlayWebRTCStreamOnceForEachSession() {
+		return playWebRTCStreamOnceForEachSession;
+	}
+
+	public void setPlayWebRTCStreamOnceForEachSession(boolean playWebRTCStreamOnceForEachSession) {
+		this.playWebRTCStreamOnceForEachSession = playWebRTCStreamOnceForEachSession;
+	}
+
+	public boolean isStatsBasedABREnabled() {
+		return statsBasedABREnabled;
+	}
+
+	public void setStatsBasedABREnabled(boolean statsBasedABREnabled) {
+		this.statsBasedABREnabled = statsBasedABREnabled;
+	}
+
+	public float getAbrDownScalePacketLostRatio() {
+		return abrDownScalePacketLostRatio;
+	}
+
+	public void setAbrDownScalePacketLostRatio(float abrDownScalePacketLostRatio) {
+		this.abrDownScalePacketLostRatio = abrDownScalePacketLostRatio;
+	}
+
+	public float getAbrUpScalePacketLostRatio() {
+		return abrUpScalePacketLostRatio;
+	}
+
+	public void setAbrUpScalePacketLostRatio(float abrUpScalePacketLostRatio) {
+		this.abrUpScalePacketLostRatio = abrUpScalePacketLostRatio;
+	}
+
+	public int getAbrUpScaleRTTMs() {
+		return abrUpScaleRTTMs;
+	}
+
+	public void setAbrUpScaleRTTMs(int abrUpScaleRTTMs) {
+		this.abrUpScaleRTTMs = abrUpScaleRTTMs;
+	}
+
+	public int getAbrUpScaleJitterMs() {
+		return abrUpScaleJitterMs;
+	}
+
+	public void setAbrUpScaleJitterMs(int abrUpScaleJitterMs) {
+		this.abrUpScaleJitterMs = abrUpScaleJitterMs;
+	}
+
+	public String getClusterCommunicationKey() {
+		return clusterCommunicationKey;
+	}
+
+	public void setClusterCommunicationKey(String clusterCommunicationKey) {
+		this.clusterCommunicationKey = clusterCommunicationKey;
+	}
+
+	public int getMaxFpsAccept() {
+		return maxFpsAccept;
+	}
+
+	public void setMaxFpsAccept(int maxFpsAccept) {
+		this.maxFpsAccept = maxFpsAccept;
+	}
+
+	public String getDataChannelWebHookURL() {
+		return dataChannelWebHookURL;
+	}
+
+	public String getVodUploadFinishScript() {
+		return vodUploadFinishScript;
+	}
+
+	public boolean isId3TagEnabled() {
+		return id3TagEnabled;
+	}
+
+	public void setId3TagEnabled(boolean id3TagEnabled) {
+		this.id3TagEnabled = id3TagEnabled;
+	}
+
+	public boolean isSendAudioLevelToViewers() {
+		return sendAudioLevelToViewers;
+	}
+
+	public void setSendAudioLevelToViewers(boolean sendAudioLevelToViewers) {
+		this.sendAudioLevelToViewers = sendAudioLevelToViewers;
+	}
+
+	public String getTimeTokenSecretForPublish() {
+		return timeTokenSecretForPublish;
+	}
+
+	public void setTimeTokenSecretForPublish(String timeTokenSecretForPublish) {
+		this.timeTokenSecretForPublish = timeTokenSecretForPublish;
+	}
+
+	public String getTimeTokenSecretForPlay() {
+		return timeTokenSecretForPlay;
+	}
+
+	public void setTimeTokenSecretForPlay(String timeTokenSecretForPlay) {
+		this.timeTokenSecretForPlay = timeTokenSecretForPlay;
+	}
+
+	public boolean isHwScalingEnabled() {
+		return hwScalingEnabled;
+	}
+
+	public void setHwScalingEnabled(boolean hwScalingEnabled) {
+		this.hwScalingEnabled = hwScalingEnabled;
+	}
+
+	public boolean isHwDecoderEnabled() {
+		return hwDecoderEnabled;
+	}
+
+	public void setHwDecoderEnabled(boolean hwDecoderEnabled) {
+		this.hwDecoderEnabled = hwDecoderEnabled;
+	}
+
+	public String getFirebaseAccountKeyJSON() {
+		return firebaseAccountKeyJSON;
+	}
+
+	public void setFirebaseAccountKeyJSON(String firebaseAccountKeyJSON) {
+		this.firebaseAccountKeyJSON = firebaseAccountKeyJSON;
+	}
+
+	public String getSubscriberAuthenticationKey() {
+		return subscriberAuthenticationKey;
+	}
+
+	public void setSubscriberAuthenticationKey(String subscriberAuthenticationKey) {
+		this.subscriberAuthenticationKey = subscriberAuthenticationKey;
+	}
+
+	public String getApnsServer() {
+		return apnsServer;
+	}
+
+	public String getApnPrivateKey() {
+		return apnPrivateKey;
+	}
+
+	public String getApnKeyId() {
+		return apnKeyId;
+	}
+
+	public String getApnTeamId() {
+		return apnTeamId;
+	}
+
+	public void setApnTeamId(String apnTeamId) {
+		this.apnTeamId = apnTeamId;
+	}
+
+	public void setApnPrivateKey(String apnPrivateKey) {
+		this.apnPrivateKey = apnPrivateKey;
+	}
+
+	public void setApnKeyId(String apnKeyId) {
+		this.apnKeyId = apnKeyId;
+	}
+
+	public void setApnsServer(String apnsServer) {
+		this.apnsServer = apnsServer;
+	}
+
+	public int getWebhookRetryCount() {
+		return webhookRetryCount;
+	}
+
+	public void setWebhookRetryCount(int webhookRetryCount) {
+		this.webhookRetryCount = webhookRetryCount;
+	}
+
+	public long getWebhookRetryDelay() {
+		return webhookRetryDelay;
+	}
+
+	public void setWebhookRetryDelay(long webhookRetryDelay) {
+		this.webhookRetryDelay = webhookRetryDelay;
+	}
+
+	@JsonIgnore
+	public boolean isWebhookPlayAuthEnabled() {
+		return getWebhookPlayAuthUrl() != null && !getWebhookPlayAuthUrl().isEmpty();
+	}
+
+	public String getWebhookPlayAuthUrl() {
+		return webhookPlayAuthUrl;
+	}
+
+	public void setWebhookPlayAuthUrl(String webhookPlayAuthUrl) {
+		this.webhookPlayAuthUrl = webhookPlayAuthUrl;
+	}
+
+	public boolean isSecureAnalyticEndpoint() {
+		return secureAnalyticEndpoint;
+	}
+
+	public void setSecureAnalyticEndpoint(boolean secureAnalyticEndpoint) {
+		this.secureAnalyticEndpoint = secureAnalyticEndpoint;
+	}
+
+	public String getHlsSegmentType() {
+		return hlsSegmentType;
+	}
+
+	public void setHlsSegmentType(String hlsSegmentType) {
+		this.hlsSegmentType = hlsSegmentType;
+	}
+
+	public String getRecordingSubfolder() {
+		return recordingSubfolder;
+	}
+
+	public void setRecordingSubfolder(String recordingSubfolder) {
+		this.recordingSubfolder = recordingSubfolder;
+	}
+
+	public String getWebhookContentType() {
+		return webhookContentType;
+	}
+
+	public void setWebhookContentType(String webhookContentType) {
+		this.webhookContentType = webhookContentType;
+	}
+
+	public Map<String, List<String>> getParticipantVisibilityMatrix() {
+		return participantVisibilityMatrix;
+	}
+	
+	public void setParticipantVisibilityMatrix(Map<String, List<String>> participantVisibilityMatrix) {
+        this.participantVisibilityMatrix = participantVisibilityMatrix;
+    }
+
+	public long getIceGatheringTimeoutMs() {
+		return iceGatheringTimeoutMs;
+	}
+
+	public void setIceGatheringTimeoutMs(long iceGatheringTimeoutMs) {
+		this.iceGatheringTimeoutMs = iceGatheringTimeoutMs;
+	}
+
+	public Map<String, Object> getCustomSettings() {
+		return customSettings;
+	}
+
+	public void setCustomSettings(Map<String, Object> customSettings) {
+		this.customSettings = customSettings;
+	}
+
+	/**
+	 * @return the relayRTMPMetaDataToMuxers
+	 */
+	public boolean isRelayRTMPMetaDataToMuxers() {
+		return relayRTMPMetaDataToMuxers;
+	}
+
+	/**
+	 * @param relayRTMPMetaDataToMuxers the relayRTMPMetaDataToMuxers to set
+	 */
+	public void setRelayRTMPMetaDataToMuxers(boolean relayRTMPMetaDataToMuxers) {
+		this.relayRTMPMetaDataToMuxers = relayRTMPMetaDataToMuxers;
+	}
+
+	/**
+	 * @return the dropWebRTCIngestIfNoPacketReceived
+	 */
+	public boolean isDropWebRTCIngestIfNoPacketReceived() {
+		return dropWebRTCIngestIfNoPacketReceived;
+	}
+
+	/**
+	 * @param dropWebRTCIngestIfNoPacketReceived the dropWebRTCIngestIfNoPacketReceived to set
+	 */
+	public void setDropWebRTCIngestIfNoPacketReceived(boolean dropWebRTCIngestIfNoPacketReceived) {
+		this.dropWebRTCIngestIfNoPacketReceived = dropWebRTCIngestIfNoPacketReceived;
+	}
+
+
+	/**
+	 * @return the dbId
+	 */
+	@JsonIgnore
+	public ObjectId getDbId() {
+		return dbId;
+	}
+
+
+	public int getSrtReceiveLatencyInMs() {
+		return srtReceiveLatencyInMs;
+	}
+
+	public void setSrtReceiveLatencyInMs(int srtReceiveLatencyInMs) {
+		this.srtReceiveLatencyInMs = srtReceiveLatencyInMs;
+	}
+
+	public long getWebhookStreamStatusUpdatePeriodMs() {
+		return webhookStreamStatusUpdatePeriodMs;
+	}
+	
+	public void setWebhookStreamStatusUpdatePeriodMs(long webhookStreamStatusUpdatePeriodMs) {
+		this.webhookStreamStatusUpdatePeriodMs = webhookStreamStatusUpdatePeriodMs;
+	}
+
+
+    public int getEncodingQueueSize() {
+        return encodingQueueSize;
+    }
+
+    public void setEncodingQueueSize(int encodingQueueSize) {
+        this.encodingQueueSize = encodingQueueSize;
+    }
+
+	public String getSubFolder() {
+		return subFolder;
+	}
+
+	public void setSubFolder(String subFolder) {
+		this.subFolder = subFolder;
+	}
+
+	/**
+	 * @return the previewFormat
+	 */
+	public String getPreviewFormat() {
+		return previewFormat;
+	}
+
+	/**
+	 * @param previewFormat the previewFormat to set
+	 */
+	public void setPreviewFormat(String previewFormat) {
+		this.previewFormat = previewFormat;
+	}
+
+	/**
+	 * @return the previewQuality
+	 */
+	public int getPreviewQuality() {
+		return previewQuality;
+	}
+
+	/**
+	 * @param previewQuality the previewQuality to set
+	 */
+	public void setPreviewQuality(int previewQuality) {
+		this.previewQuality = previewQuality;
+	}
+
+	/**
+	 * @return the writeSubscriberEventsToDatastore
+	 */
+	public boolean isWriteSubscriberEventsToDatastore() {
+		return writeSubscriberEventsToDatastore;
+	}
+
+	/**
+	 * @param writeSubscriberEventsToDatastore the writeSubscriberEventsToDatastore to set
+	 */
+	public void setWriteSubscriberEventsToDatastore(boolean writeSubscriberEventsToDatastore) {
+		this.writeSubscriberEventsToDatastore = writeSubscriberEventsToDatastore;
+	}
+
+	public boolean isDisableAudio() {
+		return disableAudio;
+	}
+
+	public void setDisableAudio(boolean disableAudio) {
+		this.disableAudio = disableAudio;
+	}
+
+	/**
+	 * @return the appInstallationTime
+	 */
+	public long getAppInstallationTime() {
+		return appInstallationTime;
+	}
+
+	/**
+	 * @param appInstallationTime the appInstallationTime to set
+	 */
+	public void setAppInstallationTime(long appInstallationTime) {
+		this.appInstallationTime = appInstallationTime;
+	}
+
+	public int getS3TransferBufferSizeInBytes() {
+		return s3TransferBufferSizeInBytes;
+	}
+
+	public void setS3TransferBufferSizeInBytes(int s3TransferBufferSizeInBytes) {
+		this.s3TransferBufferSizeInBytes = s3TransferBufferSizeInBytes;
+	}
+
+	/**
+	 * @return the encoderParameters
+	 */
+	public Map<String, Map<String,String>> getEncoderParameters() {
+		return encoderParameters;
+	}
+
+	/**
+	 * @param encoderParameters the encoderParameters to set
+	 */
+	public void setEncoderParameters(Map<String, Map<String,String>> encoderParameters) {
+		this.encoderParameters = encoderParameters;
+	}
+
+	/**
+	 * @return the hlsSegmentFileSuffixFormat
+	 */
+	public String getHlsSegmentFileSuffixFormat() {
+		return hlsSegmentFileSuffixFormat;
+	}
+
+	/**
+	 * @param hlsSegmentFileSuffixFormat the hlsSegmentFileSuffixFormat to set
+	 */
+	public void setHlsSegmentFileSuffixFormat(String hlsSegmentFileSuffixFormat) {
+		this.hlsSegmentFileSuffixFormat = hlsSegmentFileSuffixFormat;
+	}
+
+	public int getAudioLevelThreshold() {
+		return audioLevelThreshold;
+	}
+
+	public void setAudioLevelThreshold(int audioLevelThreshold) {
+		this.audioLevelThreshold = audioLevelThreshold;
+	}
+
+	public String getStreamStartedScript() {
+		return streamStartedScript;
+	}
+
+	public void setStreamStartedScript(String streamStartedScript) {
+		this.streamStartedScript = streamStartedScript;
+	}
+
+	public String getStreamEndedScript() {
+		return streamEndedScript;
+	}
+
+	public void setStreamEndedScript(String streamEndedScript) {
+		this.streamEndedScript = streamEndedScript;
+	}
+
+	public String getStreamIdleTimeoutScript() {
+		return streamIdleTimeoutScript;
+	}
+
+	public void setStreamIdleTimeoutScript(String streamIdleTimeoutScript) {
+		this.streamIdleTimeoutScript = streamIdleTimeoutScript;
+	}
+}
