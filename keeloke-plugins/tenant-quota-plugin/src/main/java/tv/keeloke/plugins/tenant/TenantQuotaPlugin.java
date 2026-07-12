@@ -1,6 +1,7 @@
 package tv.keeloke.plugins.tenant;
 
 import io.antmedia.AntMediaApplicationAdapter;
+import io.antmedia.datastore.db.types.Broadcast;
 import io.antmedia.plugin.api.IStreamListener;
 import org.red5.server.api.scope.IScope;
 import org.red5.server.api.stream.IStreamPublishSecurity;
@@ -36,9 +37,24 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * This is the metering/enforcement layer a billing system would sit on top
  * of. It does NOT implement invoicing, payment processing, or API-key
- * issuance - seeTENANT_QUOTA_README.md for why those are a product/business
+ * issuance - see TENANT_QUOTA_README.md for why those are a product/business
  * decision (pricing, payment processor choice) rather than something to
  * hardcode here, plus a sketch of how to wire one in.
+ *
+ * v2 (Ant Media 3.0.3): IStreamPublishSecurity.isPublishAllowed() gained 3
+ * extra trailing String parameters in this server version vs 2.11.3 (their
+ * exact semantics aren't documented in the public API surface we could
+ * inspect - unused here, kept only to satisfy the interface signature).
+ * IStreamListener.streamStarted/streamFinished now take a Broadcast instead
+ * of a bare streamId.
+ *
+ * Also fixes a real bug found during live verification against 2.11.3:
+ * activeStreamsPerTenant was only ever mutated by recordTenantStreamStart/End,
+ * which nothing called - so the quota check always saw 0 active streams and
+ * could never actually reject a publish. Fixed by incrementing directly in
+ * isPublishAllowed() (which has the tenant name via IScope) and decrementing
+ * in streamFinished() (using this instance's own app name, since one plugin
+ * instance exists per app/tenant).
  */
 @Component
 public class TenantQuotaPlugin implements IStreamListener, IStreamPublishSecurity, ApplicationContextAware {
@@ -55,7 +71,6 @@ public class TenantQuotaPlugin implements IStreamListener, IStreamPublishSecurit
     private ApplicationContext applicationContext;
     private RedissonClient redisson;
 
-    // in-process fast path for the publish-security check; Redis holds the durable/shared counters
     private final Map<String, Integer> activeStreamsPerTenant = new ConcurrentHashMap<>();
     private final Map<String, Long> streamStartEpochMs = new ConcurrentHashMap<>();
     private final Map<String, Integer> quotaOverridesPerTenant = new ConcurrentHashMap<>();
@@ -90,7 +105,8 @@ public class TenantQuotaPlugin implements IStreamListener, IStreamPublishSecurit
 
     @Override
     public boolean isPublishAllowed(IScope scope, String streamId, String mode,
-                                     Map<String, String> parametersMap, String clientId) {
+                                     Map<String, String> parametersMap, String param5,
+                                     String param6, String param7, String param8) {
         String tenantApp = scope.getName();
         int active = activeStreamsPerTenant.getOrDefault(tenantApp, 0);
         int quota = quotaFor(tenantApp);
@@ -100,35 +116,29 @@ public class TenantQuotaPlugin implements IStreamListener, IStreamPublishSecurit
                     streamId, tenantApp, active, quota);
             return false;
         }
+
+        recordTenantStreamStart(tenantApp);
         return true;
     }
 
     // ---- IStreamListener: usage metering ----
 
     @Override
-    public void streamStarted(String streamId) {
-        // NOTE: IStreamListener only gives us the streamId, not the app/tenant name.
-        // isPublishAllowed() already ran (and passed) for this stream just before this
-        // callback fires, so we track active-count per tenant from there; here we only
-        // need the wall-clock start time to compute duration on streamFinished().
-        streamStartEpochMs.put(streamId, System.currentTimeMillis());
+    public void streamStarted(Broadcast broadcast) {
+        streamStartEpochMs.put(broadcast.getStreamId(), System.currentTimeMillis());
     }
 
     @Override
-    public void streamFinished(String streamId) {
+    public void streamFinished(Broadcast broadcast) {
+        String streamId = broadcast.getStreamId();
         Long startedAt = streamStartEpochMs.remove(streamId);
-        if (startedAt == null) {
-            return;
-        }
-        long minutes = Math.max(1, (System.currentTimeMillis() - startedAt) / 60000);
-        // Tenant attribution for the usage counters is done via recordTenantStreamStart/End,
-        // called from a thin IStreamPublishSecurity-adjacent wrapper in real deployments where
-        // the app name is known at both ends of the stream lifecycle. Documented as a known
-        // simplification in TENANT_QUOTA_README.md rather than guessed at here.
-        logger.debug("Stream {} ran for ~{} minute(s)", streamId, minutes);
+        long minutes = startedAt != null ? Math.max(1, (System.currentTimeMillis() - startedAt) / 60000) : 0;
+
+        String tenantApp = applicationContext.getBean(AntMediaApplicationAdapter.class).getAppSettings().getAppName();
+        recordTenantStreamEnd(tenantApp, minutes);
     }
 
-    public void recordTenantStreamStart(String tenantApp) {
+    private void recordTenantStreamStart(String tenantApp) {
         activeStreamsPerTenant.merge(tenantApp, 1, Integer::sum);
         RMap<String, TenantUsage> usageMap = redisson.getMap(USAGE_MAP_NAME);
         TenantUsage usage = usageMap.getOrDefault(tenantApp, new TenantUsage(tenantApp, 0, quotaFor(tenantApp), 0, 0));
@@ -137,7 +147,7 @@ public class TenantQuotaPlugin implements IStreamListener, IStreamPublishSecurit
         usageMap.put(tenantApp, usage);
     }
 
-    public void recordTenantStreamEnd(String tenantApp, long durationMinutes) {
+    private void recordTenantStreamEnd(String tenantApp, long durationMinutes) {
         activeStreamsPerTenant.merge(tenantApp, -1, (a, b) -> Math.max(0, a + b));
         RMap<String, TenantUsage> usageMap = redisson.getMap(USAGE_MAP_NAME);
         TenantUsage usage = usageMap.getOrDefault(tenantApp, new TenantUsage(tenantApp, 0, quotaFor(tenantApp), 0, 0));

@@ -1,6 +1,7 @@
 package tv.keeloke.plugins.restream;
 
 import io.antmedia.AntMediaApplicationAdapter;
+import io.antmedia.datastore.db.types.Broadcast;
 import io.antmedia.plugin.api.IStreamListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,8 @@ public class RestreamPlugin implements IStreamListener, ApplicationContextAware 
     }
 
     @Override
-    public void streamStarted(String streamId) {
+    public void streamStarted(Broadcast broadcast) {
+        String streamId = broadcast.getStreamId();
         List<RestreamDestination> destinations = store.forStream(streamId);
         if (destinations.isEmpty()) {
             return;
@@ -81,7 +83,8 @@ public class RestreamPlugin implements IStreamListener, ApplicationContextAware 
     }
 
     @Override
-    public void streamFinished(String streamId) {
+    public void streamFinished(Broadcast broadcast) {
+        String streamId = broadcast.getStreamId();
         processManager.stopAllForStream(streamId);
         logger.info("Stream {} finished - all restreams stopped", streamId);
     }

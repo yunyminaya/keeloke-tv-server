@@ -1,6 +1,7 @@
 package tv.keeloke.plugins.cluster;
 
 import io.antmedia.AntMediaApplicationAdapter;
+import io.antmedia.datastore.db.types.Broadcast;
 import io.antmedia.plugin.api.IStreamListener;
 import org.redisson.Redisson;
 import org.redisson.api.RMap;
@@ -119,12 +120,12 @@ public class ClusterRegistryPlugin implements IStreamListener, ApplicationContex
     }
 
     @Override
-    public void streamStarted(String streamId) {
+    public void streamStarted(Broadcast broadcast) {
         activeStreamCount.incrementAndGet();
     }
 
     @Override
-    public void streamFinished(String streamId) {
+    public void streamFinished(Broadcast broadcast) {
         activeStreamCount.decrementAndGet();
     }
 
