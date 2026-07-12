@@ -1,26 +1,35 @@
 package tv.keeloke.plugins.cluster;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.context.ApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import jakarta.servlet.ServletContext;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
 import java.util.Collection;
 
 /**
- * GET /keeloke/v1/cluster/nodes -> currently-alive Keeloke TV Server nodes
- * sharing the same Redis registry, with their live-stream load. Useful as
- * the data source for an external load balancer / ingest router.
+ * GET /rest/keeloke/v1/cluster/nodes -> currently-alive Keeloke TV Server nodes
+ * sharing the same Redis registry, with their live-stream load.
+ *
+ * JAX-RS with manual Spring bean lookup via WebApplicationContextUtils -
+ * see TenantRestService for why (plain @Autowired/@Component came back null
+ * live, since Jersey instantiates its own resources).
  */
-@RestController
-@RequestMapping("/keeloke/v1/cluster")
+@Path("/keeloke/v1/cluster")
 public class ClusterRestService {
 
-    @Autowired
-    private ClusterRegistryPlugin clusterRegistryPlugin;
+    @Context
+    private ServletContext servletContext;
 
-    @GetMapping("/nodes")
+    @GET
+    @Path("/nodes")
+    @Produces(MediaType.APPLICATION_JSON)
     public Collection<ClusterNodeInfo> nodes() {
-        return clusterRegistryPlugin.listNodes().values();
+        ApplicationContext ctx = WebApplicationContextUtils.getWebApplicationContext(servletContext);
+        return ctx.getBean(ClusterRegistryPlugin.class).listNodes().values();
     }
 }
