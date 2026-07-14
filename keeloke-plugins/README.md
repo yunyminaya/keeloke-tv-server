@@ -71,7 +71,26 @@ en `Keeloke-TV- Server/` (versión 2.11.3).
   núcleo del pipeline de medios, o en el caso de DRM, una cuenta con un
   proveedor de licencias certificado).
 
-## Instalar un plugin (restream / cluster-registry)
+## Instalar TODO con un solo comando
+
+```bash
+cd keeloke-plugins
+./install-all.sh /ruta/al/servidor      # p.ej. /usr/local/antmedia
+```
+
+Compila los 9 plugins y copia los `.jar` a `<servidor>/plugins/` y el dashboard
+a la raíz web. Variables útiles:
+
+- `RESTART=1` reinicia el servicio al terminar.
+- `SKIP_BUILD=1` solo instala jars ya compilados.
+- `AMS_JAR=/ruta/ant-media-server.jar` para resolver la dependencia del servidor
+  si Maven Central no tiene la versión (se auto-detecta si no se indica).
+
+Requisitos: JDK 17+, Maven, Redis accesible, y acceso a internet para las
+dependencias (redisson/jackson). Cada plugin viene **desactivado** por defecto
+hasta que lo habilitas o le das su API key.
+
+## Instalar un plugin suelto (restream / cluster-registry)
 
 Cada plugin es un módulo Maven independiente que depende del artefacto
 público `io.antmedia:ant-media-server` (publicado en Maven Central). Para
