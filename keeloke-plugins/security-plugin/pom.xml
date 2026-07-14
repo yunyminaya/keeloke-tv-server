@@ -1,0 +1,70 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>tv.keeloke.plugins</groupId>
+    <artifactId>security-plugin</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>Keeloke TV - Security &amp; Analytics Plugin</name>
+    <description>
+        Adds, without any Ant Media Enterprise license, per-tenant advanced
+        stream security and viewer analytics on top of Ant Media Server
+        Community Edition: HMAC signed per-stream tokens for publish/play,
+        CIDR IP allow/deny lists, best-effort country allow-list, TOTP
+        (RFC 6238) protection for admin REST calls, granular HMAC-signed
+        webhooks (access.denied, viewer.joined, viewer.left) beyond the core
+        listenerHookURL, and a viewer analytics snapshot (play sessions,
+        concurrent viewers, country breakdown) via REST.
+    </description>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <ant-media-server.version>3.0.3</ant-media-server.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.antmedia</groupId>
+            <artifactId>ant-media-server</artifactId>
+            <version>${ant-media-server.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.24.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>6.1.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>keeloke-security-plugin</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals><goal>shade</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
