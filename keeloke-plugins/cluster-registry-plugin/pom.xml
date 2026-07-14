@@ -6,22 +6,26 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>Keeloke TV - Cluster Registry Plugin</name>
+    <name>Keeloke TV - Cluster Coordination Plugin</name>
     <description>
-        Foundational service-discovery for a multi-node Keeloke TV Server deployment:
-        each node heartbeats its identity and live-stream count into Redis (via the
-        Redisson client already bundled with Ant Media Server), and a REST endpoint
-        lists all currently-alive nodes. This is NOT full Enterprise-grade clustering
-        (no automatic stream migration, no edge/origin routing, no shared session
-        state) - see keeloke-plugins/CLUSTERING_AND_SCALE_ROADMAP.md for what real
-        clustering additionally requires and why it isn't faked here.
+        Multi-node coordination for a Keeloke TV Server deployment, with no Ant
+        Media Enterprise license: each node heartbeats identity, role
+        (origin/edge/hybrid), region, capacity and CPU load into Redis and
+        records itself as the origin of every stream it ingests. On top of that
+        registry it adds least-loaded origin selection and edge pull-URL routing
+        (ClusterLoadBalancer), dead-node detection with orphaned-stream cleanup
+        and failover webhooks (ClusterFailoverMonitor), and a load signal +
+        Prometheus metrics an EXTERNAL autoscaler (K8s HPA / AWS ASG / GCP MIG)
+        consumes to scale the fleet (ClusterAutoScaleAdvisor). The server never
+        holds cloud credentials to launch instances itself - see
+        keeloke-plugins/CLUSTERING_AND_SCALE_ROADMAP.md.
     </description>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <ant-media-server.version>2.11.3</ant-media-server.version>
+        <ant-media-server.version>3.0.3</ant-media-server.version>
     </properties>
 
     <dependencies>
