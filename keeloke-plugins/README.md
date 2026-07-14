@@ -48,6 +48,23 @@ en `Keeloke-TV- Server/` (versión 2.11.3).
   unifica tenants, uso, nodos del clúster, escalado e IA leyendo los endpoints
   REST de los plugins. Ver `dashboard/README.md`.
 
+- **`hls-encryption-plugin/`** — DRM básico: cifrado HLS AES-128 (RFC 8216) por
+  stream con entrega de clave protegida por token, claves compartidas en Redis.
+  Expone `/keeloke/v1/drm/{streamId}/{key,token,status}`.
+
+- **`spatial-360-plugin/`** — marca grabaciones como 360° inyectando metadata
+  Spherical Video V1 en el MP4 al terminar el stream (sin transcode).
+  Expone `/keeloke/v1/spatial/{streamId}/{mark360,unmark360,status}`.
+
+- **`conference-rooms-plugin/`** — gestión de salas multi-participante WebRTC:
+  crear/unir/salir con roles publisher/subscriber y capacidad aplicada sin
+  carreras vía lock distribuido en Redis.
+  Expone `/keeloke/v1/conference/rooms*`. Ver `SFU_SCALING.md` para escalar a
+  grandes audiencias.
+
+- **`SFU_SCALING.md`** — arquitectura honesta para WebRTC a gran escala: qué
+  está construido (salas, edges) y qué requiere integrar un SFU open-source.
+
 - **`CLUSTERING_AND_SCALE_ROADMAP.md`** — explicación honesta de qué falta
   para clustering completo, WebRTC a gran escala y DRM, y por qué esas tres
   cosas concretas no se pueden fingir con un plugin (requieren cambios en el

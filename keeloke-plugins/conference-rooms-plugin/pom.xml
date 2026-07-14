@@ -1,0 +1,68 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>tv.keeloke.plugins</groupId>
+    <artifactId>conference-rooms-plugin</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>Keeloke TV - Conference Rooms Plugin</name>
+    <description>
+        Multi-participant conference room management (signaling/coordination
+        state) for many-to-many WebRTC sessions: create rooms, join/leave with
+        publisher/subscriber roles, per-room capacity enforced race-free via a
+        Redis distributed lock, shared cluster-wide. The media forwarding is the
+        server's WebRTC engine; large-audience scale is via edge distribution
+        (see cluster plugin) or an external SFU (see SFU_SCALING.md).
+    </description>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <ant-media-server.version>3.0.3</ant-media-server.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.antmedia</groupId>
+            <artifactId>ant-media-server</artifactId>
+            <version>${ant-media-server.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.24.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>6.1.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>keeloke-conference-rooms-plugin</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals><goal>shade</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

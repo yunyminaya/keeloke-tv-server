@@ -61,22 +61,39 @@ espectadores simultáneos por stream se necesita una arquitectura SFU
 Esto es, otra vez, trabajo de meses en la capa de transporte de medios, no
 algo que un plugin externo pueda añadir con seguridad.
 
-### 3. DRM (Widevine / FairPlay / PlayReady)
+### 3. DRM básico (AES-128 HLS) — ✅ CONSTRUIDO · vs DRM certificado (Widevine/FairPlay) — límite estructural
 
-DRM real requiere:
+**DRM básico (cifrado AES-128 HLS)**: ✅ hecho en `hls-encryption-plugin/`.
+Cada segmento `.ts` se cifra con AES-128-CBC (estándar RFC 8216) y la clave se
+entrega por un endpoint protegido con token. Detiene el ripeo casual y la
+reproducción no autorizada. 15 aserciones unitarias verifican clave/IV/keyinfo/token.
 
-- Un **servidor de licencias** (Widevine/FairPlay license server), que
-  típicamente es un servicio de un proveedor certificado (Axinom, EZDRM,
-  BuyDRM, etc.) — Google/Apple no dan las claves de encriptación de
-  contenido a cualquiera, hay un proceso de certificación.
-- Empaquetado de contenido cifrado (CENC) integrado en el pipeline HLS/DASH.
-- Cumplimiento de "robustness requirements" de cada esquema DRM.
+**DRM certificado (Widevine / FairPlay / PlayReady)**: esto sí es un límite
+estructural, no de tiempo. Requiere:
 
-**No es técnicamente posible construir DRM funcional sin una cuenta con un
-proveedor de licencias DRM certificado.** No es una limitación de tiempo de
-ingeniería, es un requisito estructural del ecosistema DRM. Si en algún
-momento tienes cuenta con un proveedor de licencias, ahí sí puedo ayudar a
-integrar el empaquetado CENC + el flujo de licencias en el servidor.
+- Un **servidor de licencias** de un proveedor certificado (Axinom, EZDRM,
+  BuyDRM, etc.) — Google/Apple no dan las claves de contenido sin un proceso
+  de certificación.
+- Empaquetado CENC integrado en el pipeline HLS/DASH.
+- Cumplimiento de "robustness requirements" de cada esquema.
+
+**No es posible construir DRM certificado sin una cuenta con un proveedor de
+licencias.** Si en algún momento la tienes, ahí sí puedo integrar el
+empaquetado CENC + el flujo de licencias encima del cifrado que ya existe.
+
+### 4. WebRTC a gran escala / SFU — ver `SFU_SCALING.md`
+
+Gestión de salas multi-participante (roles, capacidad, cluster-wide): ✅ hecho
+en `conference-rooms-plugin/`. Fan-out WebRTC a miles por stream: se documenta
+la arquitectura real (edges del cluster-plugin + integración con un SFU
+open-source como mediasoup/Janus/Pion/LiveKit), sin fingir un SFU propio.
+
+### 5. 360° — ✅ CONSTRUIDO
+
+`spatial-360-plugin/` inyecta metadata Spherical Video V1 en las grabaciones
+MP4 para que los reproductores las muestren en esfera. Sin transcode (los
+píxeles equirectangulares pasan intactos). 13 aserciones verifican la
+construcción del box y la reescritura de tamaños MP4.
 
 ## Próximos pasos sugeridos, en orden de esfuerzo/valor
 

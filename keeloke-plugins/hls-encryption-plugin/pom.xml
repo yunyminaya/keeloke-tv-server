@@ -1,0 +1,70 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>tv.keeloke.plugins</groupId>
+    <artifactId>hls-encryption-plugin</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>Keeloke TV - HLS AES-128 Encryption (basic DRM) Plugin</name>
+    <description>
+        Real, standard HLS AES-128 content protection (RFC 8216) with no paid
+        license: on stream start it produces AES-128 encrypted HLS via FFmpeg
+        stream-copy and bakes a token-gated key-delivery URL into the playlist,
+        so players can only decrypt with a valid token. Keys are shared
+        cluster-wide via Redis and revoked on stream end. This is "basic DRM"
+        (stops casual ripping / unauthorized playback); it is not a
+        studio-certified CDM (Widevine/PlayReady/FairPlay), which requires a
+        licensed packager.
+    </description>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <ant-media-server.version>3.0.3</ant-media-server.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.antmedia</groupId>
+            <artifactId>ant-media-server</artifactId>
+            <version>${ant-media-server.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.24.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>6.1.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>keeloke-hls-encryption-plugin</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals><goal>shade</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
