@@ -1,5 +1,5 @@
 [Unit]
-Description=Ant Media Server
+Description=Keeloke TV Server
 After=syslog.target network.target
 
 [Service]
