@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keeloke TV Server — Panel</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --text:#e6e9ef; --muted:#9aa3b2; --accent:#4f8cff; --ok:#3ecf8e; --warn:#f5a623; --bad:#ff5c5c;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f5f7fa; --panel:#fff; --panel2:#f0f2f6; --line:#e2e6ee; --text:#1b1f23; --muted:#5b6472; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  header{display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:650;letter-spacing:.2px}
+  header .dot{width:10px;height:10px;border-radius:50%;background:var(--muted)}
+  header .dot.live{background:var(--ok)}
+  .cfg{display:flex;gap:8px;align-items:center;margin-left:auto;flex-wrap:wrap}
+  .cfg input{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:8px;font-size:13px}
+  .cfg input#base{width:230px}
+  button{background:var(--accent);color:#fff;border:0;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600}
+  button.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+  main{padding:22px;max-width:1200px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-bottom:22px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .stat .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+  .stat .v{font-size:28px;font-weight:700;margin-top:6px}
+  .stat .s{color:var(--muted);font-size:12px;margin-top:4px}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:22px;overflow:hidden}
+  section h2{font-size:14px;margin:0;padding:14px 18px;border-bottom:1px solid var(--line);font-weight:650;display:flex;align-items:center;gap:8px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:11px 18px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  tr:last-child td{border-bottom:0}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+  .pill.ok{background:rgba(62,207,142,.15);color:var(--ok)}
+  .pill.warn{background:rgba(245,166,35,.15);color:var(--warn)}
+  .pill.bad{background:rgba(255,92,92,.15);color:var(--bad)}
+  .pill.mut{background:var(--panel2);color:var(--muted)}
+  .bar{height:7px;background:var(--panel2);border-radius:6px;overflow:hidden;min-width:90px}
+  .bar > i{display:block;height:100%;background:var(--ok)}
+  .bar > i.warn{background:var(--warn)} .bar > i.bad{background:var(--bad)}
+  .empty{padding:26px 18px;color:var(--muted);font-size:13px;text-align:center}
+  .err{color:var(--bad);font-size:12px}
+  .quota-edit{width:64px;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:4px 6px;border-radius:6px}
+  footer{color:var(--muted);font-size:12px;text-align:center;padding:20px}
+  code{background:var(--panel2);padding:1px 6px;border-radius:5px;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <span class="dot" id="health"></span>
+  <h1>Keeloke TV Server — Panel de control</h1>
+  <div class="cfg">
+    <input id="base" placeholder="http://SERVIDOR:5080" title="URL base del servidor">
+    <input id="app" placeholder="LiveApp" value="LiveApp" title="Aplicación / tenant para endpoints con scope">
+    <button onclick="refreshAll()">Actualizar</button>
+    <button class="ghost" onclick="toggleAuto()" id="autoBtn">Auto: off</button>
+  </div>
+</header>
+
+<main>
+  <div class="grid" id="stats"></div>
+
+  <section>
+    <h2>Tenants &amp; uso</h2>
+    <div id="tenants"><div class="empty">Cargando…</div></div>
+  </section>
+
+  <section>
+    <h2>Nodos del clúster</h2>
+    <div id="cluster"><div class="empty">Cargando…</div></div>
+  </section>
+
+  <section>
+    <h2>Escalado automático (señal para HPA/ASG/MIG)</h2>
+    <div id="scale"><div class="empty">Cargando…</div></div>
+  </section>
+
+  <section>
+    <h2>IA — moderación &amp; detección</h2>
+    <div id="ai"><div class="empty">Cargando…</div></div>
+  </section>
+</main>
+
+<footer>Keeloke TV Server · el panel consume los endpoints REST <code>/rest/keeloke/v1/*</code> de cada plugin.</footer>
+
+<script>
+let auto = null;
+const $ = id => document.getElementById(id);
+const base = () => ($('base').value || '').replace(/\/+$/,'');
+const app  = () => ($('app').value || 'LiveApp').trim();
+const url  = p => `${base()}/${app()}/rest${p}`;
+
+// persist base/app
+try {
+  $('base').value = localStorage.getItem('kk_base') || (location.origin.startsWith('http') ? location.origin : '');
+  $('app').value  = localStorage.getItem('kk_app')  || 'LiveApp';
+} catch(e){}
+['base','app'].forEach(id => $(id).addEventListener('change', () => {
+  try { localStorage.setItem('kk_'+id, $(id).value); } catch(e){}
+}));
+
+async function getJson(path){
+  const r = await fetch(url(path), {headers:{'Accept':'application/json'}});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+function loadClass(v){ return v>=0.8?'bad':v>=0.5?'warn':''; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function loadTenants(){
+  try{
+    const list = await getJson('/keeloke/v1/tenants/usage');
+    if(!list.length){ $('tenants').innerHTML = '<div class="empty">Sin datos de uso todavía. Publica un stream para empezar a medir.</div>'; return {count:0,active:0}; }
+    let active=0;
+    let rows = list.map(t=>{
+      active += t.activeStreams||0;
+      const q = t.maxConcurrentStreams||0;
+      const frac = q>0 ? (t.activeStreams||0)/q : 0;
+      const cls = loadClass(frac);
+      return `<tr>
+        <td><b>${esc(t.tenantApp)}</b></td>
+        <td>${t.activeStreams||0} / ${q}
+          <div class="bar"><i class="${cls}" style="width:${Math.min(100,frac*100)}%"></i></div></td>
+        <td><input class="quota-edit" type="number" min="0" value="${q}" onchange="setQuota('${esc(t.tenantApp)}', this.value)"></td>
+        <td>${(t.totalStreamMinutes||0).toLocaleString()} min</td>
+        <td>${(t.totalStreamsStarted||0).toLocaleString()}</td>
+      </tr>`;
+    }).join('');
+    $('tenants').innerHTML = `<table><thead><tr>
+      <th>Tenant (app)</th><th>Activos / cuota</th><th>Editar cuota</th><th>Minutos totales</th><th>Streams totales</th>
+      </tr></thead><tbody>${rows}</tbody></table>`;
+    return {count:list.length, active};
+  }catch(e){
+    $('tenants').innerHTML = `<div class="empty err">No se pudo leer tenants: ${esc(e.message)}. ¿Está el tenant-quota-plugin instalado y la URL base bien?</div>`;
+    return {count:0,active:0};
+  }
+}
+
+async function setQuota(tenant, value){
+  try{
+    await fetch(url(`/keeloke/v1/tenants/${encodeURIComponent(tenant)}/quota?maxConcurrentStreams=${encodeURIComponent(value)}`), {method:'POST'});
+    refreshAll();
+  }catch(e){ alert('No se pudo cambiar la cuota: '+e.message); }
+}
+
+async function loadCluster(){
+  try{
+    const nodes = await getJson('/keeloke/v1/cluster/nodes');
+    if(!nodes.length){ $('cluster').innerHTML = '<div class="empty">Ningún nodo reportando. (¿cluster-registry-plugin + Redis activos?)</div>'; return {nodes:0}; }
+    let rows = nodes.map(n=>{
+      const load = n.loadScore != null ? n.loadScore : Math.max((n.activeStreamCount||0)/(n.maxStreamCapacity||100), (n.cpuLoadPercent||0)/100);
+      const cls = loadClass(load);
+      const roleCls = n.role==='ORIGIN'?'ok':n.role==='EDGE'?'mut':'warn';
+      return `<tr>
+        <td><b>${esc(n.host)}</b><br><span class="pill mut">${esc((n.nodeId||'').slice(0,8))}</span></td>
+        <td><span class="pill ${roleCls}">${esc(n.role||'HYBRID')}</span></td>
+        <td>${esc(n.region||'default')}</td>
+        <td>${n.activeStreamCount||0} / ${n.maxStreamCapacity||'—'}</td>
+        <td>${(n.cpuLoadPercent||0).toFixed(0)}%</td>
+        <td><div class="bar"><i class="${cls}" style="width:${Math.min(100,load*100)}%"></i></div></td>
+      </tr>`;
+    }).join('');
+    $('cluster').innerHTML = `<table><thead><tr>
+      <th>Nodo</th><th>Rol</th><th>Región</th><th>Streams</th><th>CPU</th><th>Carga</th>
+      </tr></thead><tbody>${rows}</tbody></table>`;
+    return {nodes:nodes.length};
+  }catch(e){
+    $('cluster').innerHTML = `<div class="empty err">No se pudo leer el clúster: ${esc(e.message)}</div>`;
+    return {nodes:0};
+  }
+}
+
+async function loadScale(){
+  try{
+    const s = await getJson('/keeloke/v1/cluster/scale');
+    const rec = s.recommendation||'HOLD';
+    const cls = rec==='SCALE_UP'?'bad':rec==='SCALE_DOWN'?'warn':'ok';
+    $('scale').innerHTML = `<table><tbody>
+      <tr><td>Recomendación</td><td><span class="pill ${cls}">${esc(rec)}</span></td></tr>
+      <tr><td>Carga media del clúster</td><td>${((s.averageLoad||0)*100).toFixed(1)}%</td></tr>
+      <tr><td>Nodos vivos</td><td>${s.aliveNodes||0}</td></tr>
+      <tr><td>Nodos deseados</td><td>${s.desiredNodeCount||0}</td></tr>
+      <tr><td>Streams activos totales</td><td>${s.totalActiveStreams||0}</td></tr>
+      <tr><td>Métricas Prometheus</td><td><code>GET ${esc(base())}/${esc(app())}/rest/keeloke/v1/cluster/metrics</code></td></tr>
+      </tbody></table>`;
+    return s;
+  }catch(e){
+    $('scale').innerHTML = `<div class="empty err">Sin señal de escalado: ${esc(e.message)}</div>`;
+    return {};
+  }
+}
+
+async function loadAi(){
+  try{
+    const c = await getJson('/keeloke/v1/ai/config');
+    const on = c.provider && c.provider!=='disabled';
+    $('ai').innerHTML = `<table><tbody>
+      <tr><td>Estado</td><td><span class="pill ${on?'ok':'mut'}">${on?'ACTIVA':'desactivada'}</span></td></tr>
+      <tr><td>Proveedor</td><td>${esc(c.provider||'disabled')} ${c.model?('· <code>'+esc(c.model)+'</code>'):''}</td></tr>
+      <tr><td>Umbral de bloqueo</td><td>${c.flagThreshold!=null?c.flagThreshold:'—'}</td></tr>
+      <tr><td>Muestreo</td><td>cada ${c.sampleIntervalSeconds||'—'} s</td></tr>
+      <tr><td>Acción al detectar</td><td>${esc(c.actionOnFlag||'—')}</td></tr>
+      <tr><td>API key</td><td>${c.apiKey && c.apiKey!=='' ? '<span class="pill ok">configurada</span>' : '<span class="pill mut">sin configurar</span>'}</td></tr>
+      </tbody></table>`;
+    return {on};
+  }catch(e){
+    $('ai').innerHTML = `<div class="empty err">No se pudo leer config de IA: ${esc(e.message)}</div>`;
+    return {on:false};
+  }
+}
+
+function renderStats(t, c, s, a){
+  $('stats').innerHTML = `
+    <div class="stat"><div class="k">Tenants</div><div class="v">${t.count}</div><div class="s">${t.active} streams activos</div></div>
+    <div class="stat"><div class="k">Nodos del clúster</div><div class="v">${c.nodes}</div><div class="s">${s.aliveNodes!=null?('carga '+((s.averageLoad||0)*100).toFixed(0)+'%'):'—'}</div></div>
+    <div class="stat"><div class="k">Escalado</div><div class="v" style="font-size:20px">${esc(s.recommendation||'—')}</div><div class="s">${s.desiredNodeCount!=null?('deseados: '+s.desiredNodeCount):''}</div></div>
+    <div class="stat"><div class="k">IA moderación</div><div class="v" style="font-size:20px">${a.on?'Activa':'Off'}</div><div class="s">detección + moderación</div></div>`;
+}
+
+async function refreshAll(){
+  $('health').classList.remove('live');
+  const [t,c,s,a] = await Promise.all([loadTenants(), loadCluster(), loadScale(), loadAi()]);
+  renderStats(t,c,s,a);
+  $('health').classList.add('live');
+}
+
+function toggleAuto(){
+  if(auto){ clearInterval(auto); auto=null; $('autoBtn').textContent='Auto: off'; }
+  else { auto=setInterval(refreshAll, 5000); $('autoBtn').textContent='Auto: 5s'; refreshAll(); }
+}
+
+refreshAll();
+</script>
+</body>
+</html>

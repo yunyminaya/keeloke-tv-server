@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Per-tenant (per Ant Media "application") security configuration, shared
+ * Per-tenant (per server "application") security configuration, shared
  * cluster-wide via Redis so every node in a multi-node deployment enforces
  * the same rules.
  */

@@ -19,8 +19,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Fires granular, per-tenant, HMAC-signed webhook events beyond Ant Media
- * Community's built-in AppSettings.listenerHookURL (which only covers
+ * Fires granular, per-tenant, HMAC-signed webhook events beyond the server's
+ * built-in AppSettings.listenerHookURL (which only covers
  * stream started/finished/VOD-ready). Adds finer events - access denials,
  * viewer join/leave, quota rejections, etc. - to one or more configurable
  * URLs per tenant, delivered asynchronously with bounded retry so a slow or

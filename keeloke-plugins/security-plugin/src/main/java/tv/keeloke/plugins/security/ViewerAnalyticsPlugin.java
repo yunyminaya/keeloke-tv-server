@@ -30,10 +30,10 @@ import java.util.concurrent.TimeUnit;
  *
  * Concurrent-viewer count uses a TTL-based presence key per session
  * (refreshed by the player calling the heartbeat REST endpoint) rather than
- * relying on a "play stopped" event, because Ant Media/Red5 doesn't expose a
+ * relying on a "play stopped" event, because the Red5 core doesn't expose a
  * single reliable disconnect hook that fires uniformly across RTMP, HLS and
  * WebRTC playback - a heartbeat is the same tradeoff most viewer-count
- * systems (including Ant Media Enterprise's own dashboard) make in practice.
+ * systems make in practice.
  */
 @Component
 public class ViewerAnalyticsPlugin implements IStreamPlaybackSecurity {

@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 /**
- * Per-stream signed tokens, independent of Ant Media's built-in JWT/hash
+ * Per-stream signed tokens, independent of the server's built-in JWT/hash
  * token service so it can be enabled per-tenant without touching global
  * AppSettings. Format: {@code <base64url(streamId:expiryEpochSeconds)>.<base64url(HMAC-SHA256)>}
  */

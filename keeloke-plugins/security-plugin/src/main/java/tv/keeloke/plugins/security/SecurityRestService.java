@@ -16,7 +16,7 @@ import java.util.Map;
  * REST surface for the security &amp; analytics plugin. Mirrors the
  * JAX-RS/Jersey + WebApplicationContextUtils pattern already used by
  * tv.keeloke.plugins.tenant.TenantRestService (Spring MVC annotations are
- * inert on Ant Media's REST layer - see that class's javadoc).
+ * inert on the server's REST layer - see that class's javadoc).
  *
  * Admin-mutating endpoints (marked below) require a valid TOTP code in the
  * X-Keeloke-Totp-Code header whenever the tenant has a totpSecret configured

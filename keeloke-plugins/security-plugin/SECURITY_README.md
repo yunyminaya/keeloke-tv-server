@@ -1,7 +1,7 @@
 # Keeloke TV Server - Security & Analytics Plugin
 
-No Ant Media Enterprise license required. This is original code written for
-Keeloke TV Server; it does not use, embed, or depend on any Ant Media
+No paid Enterprise license required. This is original code written for
+Keeloke TV Server; it does not use, embed, or depend on any proprietary
 Enterprise artifact.
 
 ## What it adds over Community Edition
@@ -30,7 +30,7 @@ silently misclassified as a country it isn't.
 
 ## Why concurrent-viewer count is heartbeat-based
 
-Ant Media/Red5 doesn't expose one reliable "playback stopped" event that
+The Red5 core doesn't expose one reliable "playback stopped" event that
 fires consistently across RTMP, HLS and WebRTC. This plugin counts a viewer
 present via a TTL key (45s) refreshed by a heartbeat call from the player;
 miss enough heartbeats and the viewer ages out automatically. This is the
@@ -77,7 +77,7 @@ Then issue a per-viewer token:
 curl -X POST "http://SERVER:5080/LiveApp/rest/keeloke/v1/security/LiveApp/streams/myStream/token?ttlSeconds=600"
 ```
 
-and pass it back as `?token=...` (or the `token` query param Ant Media's
+and pass it back as `?token=...` (or the `token` query param the server's
 players already support) when playing `myStream`.
 
 ## Configuration properties (application.properties / red5.properties)

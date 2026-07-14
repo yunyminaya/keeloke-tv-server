@@ -13,13 +13,13 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * Enforces, per tenant (Ant Media application):
+ * Enforces, per tenant (server application):
  *  - token-based auth for publish and/or play (see {@link StreamTokenUtil})
  *  - IP allow/deny lists (CIDR, see {@link CidrMatcher})
  *  - country allow-list (best-effort, see {@link GeoIpResolver})
  *
  * Registered as both IStreamPublishSecurity and IStreamPlaybackSecurity beans
- * so Ant Media's Red5 core calls it on every publish/play attempt - same
+ * so the Red5 core calls it on every publish/play attempt - same
  * extension points already used by io.antmedia.security.ExpireStreamPublishSecurity
  * and tv.keeloke.plugins.tenant.TenantQuotaPlugin.
  */
