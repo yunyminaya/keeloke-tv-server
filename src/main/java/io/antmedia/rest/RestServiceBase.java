@@ -1624,7 +1624,7 @@ public abstract class RestServiceBase {
 			String classPath = clazz.getResource(className).toString();
 			String manifestPath = classPath.substring(0, classPath.lastIndexOf("!") + 1) + "/META-INF/MANIFEST.MF";
 
-			version.setVersionType(isEnterprise() ? RestServiceBase.ENTERPRISE_EDITION : RestServiceBase.COMMUNITY_EDITION);
+			version.setVersionType(ENTERPRISE_EDITION);
 
 
 			version.setBuildNumber(getBuildNumber(manifestPath));
