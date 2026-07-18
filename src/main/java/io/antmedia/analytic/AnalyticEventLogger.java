@@ -33,10 +33,10 @@ import jakarta.ws.rs.core.Response.Status;
 
 @OpenAPIDefinition(
 		info = @Info(
-				description = "Ant Media Server - Player Analytic Events Endpoint. It just logs the incoming player events",
+				description = "Keeloke TV Server - Player Analytic Events Endpoint. It just logs the incoming player events",
 				version = "v2.0",
-				title = "Ant Media Server - Player Analytic Events Endpoint",
-				contact = @Contact(name = "Ant Media Info", email = "contact@antmedia.io", url = "https://antmedia.io"),
+				title = "Keeloke TV Server - Player Analytic Events Endpoint",
+				contact = @Contact(name = "Keeloke TV Info", email = "info@keeloke.com", url = "https://keeloke.com"),
 				license = @License(name = "Apache 2.0", url = "https://www.apache.org/licenses/LICENSE-2.0"))
 		)
 @Component

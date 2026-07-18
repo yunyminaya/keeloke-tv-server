@@ -105,7 +105,7 @@ public class ServerSettings implements ApplicationContextAware, Serializable {
 	private static final String LOCAL_LICENCE_SERVER_IP = "server.localLicenceServerIp";
 
 	/**
-	 * The IP filter that is allowed to access the web panel of Ant Media Server
+	 * The IP filter that is allowed to access the web panel of Keeloke TV Server
 	 */
 	@Value( "${"+ALLOWED_DASH_BOARD_CIDR+":'0.0.0.0/0'}" )
 	private String allowedDashboardCIDR;
@@ -153,7 +153,7 @@ public class ServerSettings implements ApplicationContextAware, Serializable {
 
 	/**
 	 * if the license is offline. It checks license key against hardware
-	 * So license key should be provided by Ant Media specifically.
+	 * So license key should be provided by Keeloke TV specifically.
 	 * It's initialized by getting the value from the LicenceBean
 	 */
 	private boolean offlineLicense = false;
@@ -165,7 +165,7 @@ public class ServerSettings implements ApplicationContextAware, Serializable {
 	private String nativeLogLevel = LOG_LEVEL_ERROR;
 
 	/**
-	 * Enable heart beat for Ant Media Server
+	 * Enable heart beat for Keeloke TV Server
 	 */
 	@Value( "${"+SETTINGS_HEART_BEAT_ENABLED+":true}" )
 	private boolean heartbeatEnabled; 
@@ -178,7 +178,7 @@ public class ServerSettings implements ApplicationContextAware, Serializable {
 
 	/**
 	 * The proxy IP address and port for license checking. 
-	 * If there is a proxy in front of Ant Media Server(reverse proxy) please enter its IP and port
+	 * If there is a proxy in front of Keeloke TV Server(reverse proxy) please enter its IP and port
 	 * The format will be {@code <proxy_ip>:<port_number>} for example:
 	 * 					 192.168.0.1:3012
 	 */

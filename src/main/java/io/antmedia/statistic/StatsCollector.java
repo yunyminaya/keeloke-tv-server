@@ -1223,7 +1223,7 @@ public class StatsCollector implements IStatsCollector, ApplicationContextAware,
 			client.execute(post);
 
 		}catch (IOException e) {
-			logger.error("Couldn't connect Ant Media Server Analytics");
+			logger.error("Couldn't connect Keeloke TV Server Analytics");
 		} 
 	}
 

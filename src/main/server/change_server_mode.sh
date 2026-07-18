@@ -27,7 +27,7 @@ usage() {
   echo "$0  standalone {DB_CONNECTION_URL}"
   echo ""
   echo ""
-  echo "If you have any question, send e-mail to contact@antmedia.io"
+  echo "If you have any question, send e-mail to info@keeloke.com"
 }
 
 validate_parameters() {
@@ -92,11 +92,11 @@ fi
 sed -i $SED_COMPATIBILITY 's/useGlobalIp=.*/useGlobalIp='$USE_GLOBAL_IP'/' $AMS_INSTALL_LOCATION/conf/red5.properties 
 
 if [ "$OS_NAME" = "Darwin" ]; then
-  echo -e "${GREEN}You can re-start Ant Media Server on your Macos${NC}"
+  echo -e "${GREEN}You can re-start Keeloke TV Server on your Macos${NC}"
   exit 0
 fi
 
-echo -e "${GREEN}Ant Media Server is restarting in $MODE mode.${NC}"
+echo -e "${GREEN}Keeloke TV Server is restarting in $MODE mode.${NC}"
 #service antmedia restart does not work if daemon is not running so that stop and start
 service antmedia stop
 service antmedia start

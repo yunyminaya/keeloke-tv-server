@@ -12,7 +12,7 @@ TIMER_PATH="/etc/systemd/system/antmedia-ssl-renew.timer"
 if [ ! -f "$SERVICE_PATH" ]; then
     cat <<EOF > "$SERVICE_PATH"
 [Unit]
-Description=Ant Media Server SSL Renew Service
+Description=Keeloke TV Server SSL Renew Service
 Wants=network-online.target
 After=network-online.target
 
@@ -31,7 +31,7 @@ fi
 if [ ! -f "$TIMER_PATH" ]; then
     cat <<EOF > "$TIMER_PATH"
 [Unit]
-Description=Ant Media Server SSL Renew Timer
+Description=Keeloke TV Server SSL Renew Timer
 
 [Timer]
 OnCalendar=03:00

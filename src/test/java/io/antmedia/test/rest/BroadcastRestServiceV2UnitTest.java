@@ -3390,12 +3390,12 @@ public class BroadcastRestServiceV2UnitTest {
 		class TestRestBase extends RestServiceBase {
 			public void testValidateStreamUrl() {
 				assertTrue(RootRestService.validateStreamURL("srt://127.0.0.1:4200/streamid?LiveApp/stream1"));
-				assertTrue(RootRestService.validateStreamURL("rtsp://test.antmedia.io"));
-				assertTrue(RootRestService.validateStreamURL("rtmp://test.antmedia.io/LiveApp/test"));
+				assertTrue(RootRestService.validateStreamURL("rtsp://test.keeloke.com"));
+				assertTrue(RootRestService.validateStreamURL("rtmp://test.keeloke.com/LiveApp/test"));
 				assertFalse(RootRestService.validateStreamURL("srt:"));
 				assertFalse(RootRestService.validateStreamURL("srt"));
 				assertFalse(RootRestService.validateStreamURL("test"));
-				assertTrue(RootRestService.validateStreamURL("rtmps://test.antmedia.io"));
+				assertTrue(RootRestService.validateStreamURL("rtmps://test.keeloke.com"));
 			}
 		}
 		TestRestBase testRestBase = new TestRestBase();

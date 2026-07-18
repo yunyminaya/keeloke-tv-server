@@ -2,7 +2,7 @@
 
 Este documento existe para ser transparente sobre qué tan lejos llegan los
 plugins de `keeloke-plugins/` frente a lo que realmente ofrece la edición
-Enterprise de Ant Media, y qué haría falta para cerrar esa brecha con
+Enterprise de Keeloke TV, y qué haría falta para cerrar esa brecha con
 ingeniería propia (sin licencia, sin código Enterprise copiado).
 
 ## Lo que SÍ se construyó (funcional, en este repo)
@@ -49,7 +49,7 @@ descubrimiento:
 
 ### 2. WebRTC a gran escala (miles de espectadores concurrentes)
 
-Ant Media Community ya soporta WebRTC funcional, pero para miles de
+Keeloke TV Community ya soporta WebRTC funcional, pero para miles de
 espectadores simultáneos por stream se necesita una arquitectura SFU
 (Selective Forwarding Unit) con:
 

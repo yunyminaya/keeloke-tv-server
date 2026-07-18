@@ -46,13 +46,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @OpenAPIDefinition(
 	    info = @io.swagger.v3.oas.annotations.info.Info(
-	        title = "Ant Media Server Management Panel REST API",
+	        title = "Keeloke TV Server Management Panel REST API",
 	        version = "v2.0",
-	        description = "Ant Media Server Management Panel REST API",
-	        contact = @Contact(name = "Ant Media Info", email = "contact@antmedia.io", url = "https://antmedia.io"),
+	        description = "Keeloke TV Server Management Panel REST API",
+	        contact = @Contact(name = "Keeloke TV Info", email = "info@keeloke.com", url = "https://keeloke.com"),
 	        license = @License(name = "Apache 2.0", url = "http://www.apache.org")
 	    ),
-	    externalDocs = @ExternalDocumentation(description = "External Docs", url = "https://antmedia.io")
+	    externalDocs = @ExternalDocumentation(description = "External Docs", url = "https://keeloke.com")
 	)
 @Component
 @Path("/v2")
@@ -324,7 +324,7 @@ public class RestServiceV2 extends CommonRestService {
 	    return super.getGPUInfo();
 	}
 
-	@Operation(summary = "Returns the version of Ant Media Server",
+	@Operation(summary = "Returns the version of Keeloke TV Server",
 	           responses = {@ApiResponse(responseCode = "200", description = "Successful operation")})
 	@GET
 	@Path("/version")

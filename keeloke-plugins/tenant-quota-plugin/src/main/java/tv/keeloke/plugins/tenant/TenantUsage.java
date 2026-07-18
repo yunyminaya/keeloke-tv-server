@@ -1,7 +1,7 @@
 package tv.keeloke.plugins.tenant;
 
 /**
- * Aggregate usage snapshot for one tenant (Ant Media "application" == tenant
+ * Aggregate usage snapshot for one tenant (Keeloke TV "application" == tenant
  * in this simple model - each app/tenant already gets its own name, users,
  * and streams natively).
  */

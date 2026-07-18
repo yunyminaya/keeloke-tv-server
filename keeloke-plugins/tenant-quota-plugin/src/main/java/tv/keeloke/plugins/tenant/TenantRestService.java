@@ -13,7 +13,7 @@ import java.util.Collection;
  * GET  /rest/keeloke/v1/tenants/usage           -> usage analytics for every tenant (app)
  * POST /rest/keeloke/v1/tenants/{app}/quota?maxConcurrentStreams=N -> override a tenant's quota
  *
- * Ant Media Server's REST layer is JAX-RS/Jersey (mapped at /rest/*, scanning
+ * Keeloke TV Server's REST layer is JAX-RS/Jersey (mapped at /rest/*, scanning
  * io.antmedia.rest by default), not Spring MVC - @RestController/@RequestMapping
  * are silently inert here (verified live: returned 404 for every path). Jersey
  * also instantiates its own resource objects rather than pulling them from the

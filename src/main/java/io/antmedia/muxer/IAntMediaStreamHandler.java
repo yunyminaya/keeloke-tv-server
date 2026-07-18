@@ -157,9 +157,9 @@ public interface IAntMediaStreamHandler {
 	public void removeStreamListener(IStreamListener listener) ;
 	
 	/**
-	 * Add listener to get raw audio or video frames from the internal of Ant Media Server. 
+	 * Add listener to get raw audio or video frames from the internal of Keeloke TV Server. 
 	 * The methods are called if the audio/video frames are decoded due to settings such adaptive bitrate etc.. 
-	 * This method does not force the Ant Media Server to decode the streams.
+	 * This method does not force the Keeloke TV Server to decode the streams.
 	 * 'Frame' is the decoded data of audio/video 'Packet'
 	 * 
 	 * @param streamId
@@ -176,7 +176,7 @@ public interface IAntMediaStreamHandler {
 	public void removeFrameListener(String streamId, IFrameListener listener);
 	
 	/**
-	 * Add listener to get audio and video packets from the internal of Ant Media Server. 
+	 * Add listener to get audio and video packets from the internal of Keeloke TV Server. 
 	 * 'Packet' is the encoded data of audio/video 'Frame'. 
 	 * 
 	 * @param streamId

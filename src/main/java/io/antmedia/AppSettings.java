@@ -37,7 +37,7 @@ import io.antmedia.muxer.IAntMediaStreamHandler;
 import io.antmedia.muxer.Muxer;
 
 /**
- * Application Settings for each application running in Ant Media Server.
+ * Application Settings for each application running in Keeloke TV Server.
  * Each setting should have a default value with @Value annotation. Otherwise it breaks compatibility 
  *
  * These settings are set for each applications and stored in the file {@code <AMS_DIR>/webapps/<AppName>/WEB_INF/red5-web.properties}.
@@ -216,13 +216,13 @@ public class AppSettings implements Serializable{
 
 	/**
 	 * This is for making this instance run also as a signaling server.
-	 * Signaling Server lets Ant Media Server instances behind NAT stream its content to the peer in the Internet
+	 * Signaling Server lets Keeloke TV Server instances behind NAT stream its content to the peer in the Internet
 	 */
 	@Value("${signalingEnabled:false}")
 	private boolean signalingEnabled = false;
 
 	/**
-	 * This is for using another Ant Media instance as signaling server.
+	 * This is for using another Keeloke TV instance as signaling server.
 	 * If your server is behind a NAT it will allow possible connection.
 	 * It should be full qualified URI like this
 	 * ws://107.23.25.77:5080/WebRTCAppEE/websocket/signaling
@@ -408,7 +408,7 @@ public class AppSettings implements Serializable{
 	/**
 	 * The URL for action callback
 	 *  You must set this to subscribe some event notifications,
-	 *  For details check: https://antmedia.io/webhook-integration/
+	 *  For details check: https://keeloke.com/webhook-integration/
 	 */
 	@Value ("${listenerHookURL:}")
 	private String listenerHookURL = "";
@@ -430,7 +430,7 @@ public class AppSettings implements Serializable{
 
 	/**
 	 * The settings for enabling one-time token control mechanism for accessing resources and publishing
-	 * Check for details: https://antmedia.io/secure-video-streaming/. Default value is false.
+	 * Check for details: https://keeloke.com/secure-video-streaming/. Default value is false.
 	 */
 
 	@Value("${publishTokenControlEnabled:false}")
@@ -440,7 +440,7 @@ public class AppSettings implements Serializable{
 	/**
 	 * The settings for enabling one-time token control mechanism for accessing resources and publishing
 	 * It's mandatory, This enables token control,
-	 * Check for details: https://antmedia.io/secure-video-streaming/. Default value is false.
+	 * Check for details: https://keeloke.com/secure-video-streaming/. Default value is false.
 	 */
 	@Value("${playTokenControlEnabled:false}")
 	private boolean playTokenControlEnabled ;
@@ -626,7 +626,7 @@ public class AppSettings implements Serializable{
 	/**
 	 * STUN or TURN Server URI
 	 * STUN server URI used for WebRTC ICE candidates
-	 * You can check: https://antmedia.io/learn-webrtc-basics-components/,
+	 * You can check: https://keeloke.com/learn-webrtc-basics-components/,
 	 * Default value is stun:stun.l.google.com:19302
 	 *
 	 * STUN or TURN URL can be set for this properoy
@@ -1117,7 +1117,7 @@ public class AppSettings implements Serializable{
 	private int ingestingStreamLimit = -1;
 
 	/**
-	 * WebRTC Keyframe Time, Ant Media Server asks key frame for every webRTCKeyframeTime in SFU mode,
+	 * WebRTC Keyframe Time, Keeloke TV Server asks key frame for every webRTCKeyframeTime in SFU mode,
 	 * It's in milliseconds
 	 */
 	@Value("${webRTCKeyframeTime:2000}")
@@ -1335,7 +1335,7 @@ public class AppSettings implements Serializable{
 	 * There is no integer value that makes this equation true 1280/720 = x/480 -> x = 853.333
 	 *
 	 *
-	 * So Ant Media Server can change the video height to match the aspect ratio perfectly. 
+	 * So Keeloke TV Server can change the video height to match the aspect ratio perfectly. 
 	 * This is critical when there are multi-bitrates in the dash streaming. 
 	 * Because dash requires perfect match of aspect ratios of all streams
 	 *
@@ -1471,9 +1471,9 @@ public class AppSettings implements Serializable{
 	private boolean id3TagEnabled = false;
 
 	/**
-	 * Ant Media Server can get the audio level from incoming RTP Header in WebRTC streaming and send to the viewers.
+	 * Keeloke TV Server can get the audio level from incoming RTP Header in WebRTC streaming and send to the viewers.
 	 * It's very useful in video conferencing to detect if user speaks.
-	 * Ant Media Server sends audio level through webrtc data channel with JSON format
+	 * Keeloke TV Server sends audio level through webrtc data channel with JSON format
 	 * {
 	 *  "streamId":${streamId},
 	 *  "eventType": "UPDATE_AUDIO_LEVEL",
@@ -1485,7 +1485,7 @@ public class AppSettings implements Serializable{
 	 * ${audioLevel} is the audio level of the stream. It's between 0 and 127. If it's 0, it means audio level is max. 
 	 * If it's 127, it means it's audio level is min.  
 	 *
-	 * Ant Media Server sends audio level 5 times in a second
+	 * Keeloke TV Server sends audio level 5 times in a second
 	 */
 	@Value("${sendAudioLevelToViewers:false}")
 	private boolean sendAudioLevelToViewers = false;
@@ -1501,7 +1501,7 @@ public class AppSettings implements Serializable{
 
 	/**
 	 * Enable/disable video frame scaling in GPU when there is an adaptive bitrate.
-	 * It's disabled by default. If you want to use this feature, ask from Ant Media Support to have the build that supports this feature - mekya
+	 * It's disabled by default. If you want to use this feature, ask from Keeloke TV Support to have the build that supports this feature - mekya
 	 */
 	@Value("${hwScalingEnabled:false}")
 	private boolean hwScalingEnabled = false;
@@ -1633,7 +1633,7 @@ public class AppSettings implements Serializable{
 	 * Relay RTMP metadata to muxers. It's true by default
 	 * RTMP can have metadata and it can be used for playback synchronization.
 	 *
-	 * If it's true, Ant Media Server relays the metadata to muxers. 
+	 * If it's true, Keeloke TV Server relays the metadata to muxers. 
 	 * Currently, HLSMuxer supports this feature through {@link Muxer#writeMetaData(String, long)}
 	 */
 	@Value("${relayRTMPMetaDataToMuxers:true}")

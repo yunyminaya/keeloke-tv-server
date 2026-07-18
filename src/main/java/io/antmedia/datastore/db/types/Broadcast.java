@@ -449,7 +449,7 @@ public class Broadcast {
 		String name;
 		
 		/**
-		 * Duration of this item in milliseconds. It's calculated by Ant Media Server
+		 * Duration of this item in milliseconds. It's calculated by Keeloke TV Server
 		 */
 		private long durationInMs;
 		

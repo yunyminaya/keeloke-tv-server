@@ -203,7 +203,7 @@ public class AuthenticationFilterTest {
 		Mockito.when(request.getSession()).thenReturn(session);
 		
 		Mockito.when(session.getAttribute(CommonRestService.IS_AUTHENTICATED)).thenReturn(true);
-		Mockito.when(session.getAttribute(CommonRestService.USER_EMAIL)).thenReturn("test@antmedia.io");
+		Mockito.when(session.getAttribute(CommonRestService.USER_EMAIL)).thenReturn("test@keeloke.com");
 		Mockito.when(session.getAttribute(CommonRestService.USER_PASSWORD)).thenReturn("test");
 		
 
@@ -635,7 +635,7 @@ public class AuthenticationFilterTest {
 		Mockito.when(request.getSession()).thenReturn(session);
 
 		Mockito.when(session.getAttribute(CommonRestService.IS_AUTHENTICATED)).thenReturn(true);
-		Mockito.when(session.getAttribute(CommonRestService.USER_EMAIL)).thenReturn("test@antmedia.io");
+		Mockito.when(session.getAttribute(CommonRestService.USER_EMAIL)).thenReturn("test@keeloke.com");
 		Mockito.when(session.getAttribute(CommonRestService.USER_PASSWORD)).thenReturn("test");
 
 

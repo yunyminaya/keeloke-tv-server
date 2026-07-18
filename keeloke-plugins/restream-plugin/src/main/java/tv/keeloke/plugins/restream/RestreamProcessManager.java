@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * This is CPU-cheap (no re-encoding) and is exactly how a simultaneous restream to
  * YouTube/Facebook/Twitch/etc is done in practice. Only FFmpeg (already bundled with
- * Ant Media Server under plugins/) is required - no Enterprise license.
+ * Keeloke TV Server under plugins/) is required - no Enterprise license.
  */
 public class RestreamProcessManager {
 

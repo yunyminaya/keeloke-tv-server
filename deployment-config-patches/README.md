@@ -16,6 +16,6 @@ Resumen de los 2 cambios por archivo:
 `jersey.config.server.provider.packages` (para que los endpoints REST de
 los plugins respondan bajo `/rest/keeloke/v1/...`).
 
-Para aplicar esto a una instalación nueva de Ant Media Server 2.11.3, copia
+Para aplicar esto a una instalación nueva de Keeloke TV Server 2.11.3, copia
 estos 2 archivos por app sobre los tuyos (o aplica el mismo diff a mano si
 tu instalación tiene otras personalizaciones).

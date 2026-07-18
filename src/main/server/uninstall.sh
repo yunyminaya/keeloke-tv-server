@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Ant Media Server uninstall script
+# Keeloke TV Server uninstall script
 
 # Check if the script is run as root
 if [ "$EUID" -ne 0 ]; then
@@ -8,7 +8,7 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-read -p "This script will completely remove Ant Media Server all datas. Are you sure? (yes/no): " CONFIRM
+read -p "This script will completely remove Keeloke TV Server all datas. Are you sure? (yes/no): " CONFIRM
 if [[ "$CONFIRM" != "yes" ]]; then
   echo "Uninstallation canceled."
   exit 0
@@ -20,20 +20,20 @@ AMS_DIR="/usr/local/antmedia"
 SERVICE_FILE="/etc/systemd/system/antmedia.service"
 LOG_DIR="/var/log/antmedia"
 
-# Stop Ant Media Server service
-echo "Stopping Ant Media Server service..."
+# Stop Keeloke TV Server service
+echo "Stopping Keeloke TV Server service..."
 systemctl stop antmedia
 
-# Disable Ant Media Server service
-echo "Disabling Ant Media Server service..."
+# Disable Keeloke TV Server service
+echo "Disabling Keeloke TV Server service..."
 systemctl disable antmedia
 
-# Remove Ant Media Server files and directories
+# Remove Keeloke TV Server files and directories
 if [ -d "$AMS_DIR" ]; then
-  echo "Removing Ant Media Server directory: $AMS_DIR"
+  echo "Removing Keeloke TV Server directory: $AMS_DIR"
   rm -rf "$AMS_DIR"
 else
-  echo "Ant Media Server directory not found: $AMS_DIR"
+  echo "Keeloke TV Server directory not found: $AMS_DIR"
 fi
 
 # Remove systemd service file
@@ -55,6 +55,6 @@ else
   echo "Log directory not found: $LOG_DIR"
 fi
 
-echo "Ant Media Server has been successfully uninstalled."
+echo "Keeloke TV Server has been successfully uninstalled."
 
 exit 0

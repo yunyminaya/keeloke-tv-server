@@ -70,16 +70,16 @@ import jakarta.ws.rs.core.Response.Status;
 
 @OpenAPIDefinition(
 		info = @Info(
-				description = "Ant Media Server REST API for Broadcasts",
+				description = "Keeloke TV Server REST API for Broadcasts",
 				version = "v2.0",
-				title = "Ant Media Server REST API Reference",
-				contact = @Contact(name = "Ant Media Info", email = "contact@antmedia.io", url = "https://antmedia.io"),
+				title = "Keeloke TV Server REST API Reference",
+				contact = @Contact(name = "Keeloke TV Info", email = "info@keeloke.com", url = "https://keeloke.com"),
 				license = @License(name = "Apache 2.0", url = "https://www.apache.org/licenses/LICENSE-2.0")),
-		externalDocs = @ExternalDocumentation(description = "Rest Guide", url="https://antmedia.io/docs"),
+		externalDocs = @ExternalDocumentation(description = "Rest Guide", url="https://keeloke.com/docs"),
 		servers = {
 				@Server(
 						description = "test server",
-						url = "https://test.antmedia.io:5443/Sandbox/rest/"
+						url = "https://test.keeloke.com:5443/Sandbox/rest/"
 
 						)}
 
@@ -160,8 +160,8 @@ public class BroadcastRestService extends RestServiceBase{
 
 
 	@Operation(description = "Creates a Broadcast, IP Camera or Stream Source and returns the full broadcast object with rtmp address and "
-			+ "other information. The different between Broadcast and IP Camera or Stream Source is that Broadcast is ingested by Ant Media Server"
-			+ "IP Camera or Stream Source is pulled by Ant Media Server")
+			+ "other information. The different between Broadcast and IP Camera or Stream Source is that Broadcast is ingested by Keeloke TV Server"
+			+ "IP Camera or Stream Source is pulled by Keeloke TV Server")
 	@ApiResponse(responseCode = "400", description = "If stream id is already used in the data store, it returns error", 
 	content = @Content(
 			mediaType = "application/json",

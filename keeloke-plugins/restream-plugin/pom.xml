@@ -10,7 +10,7 @@
     <description>
         Forwards incoming live streams to multiple external RTMP destinations
         (YouTube, Facebook Live, Twitch, custom RTMP) simultaneously, using
-        FFmpeg as a stream copy relay. Built as an Ant Media Server Community
+        FFmpeg as a stream copy relay. Built as an Keeloke TV Server Community
         Edition plugin (io.antmedia.plugin.api.IStreamListener) - no Enterprise
         license required.
     </description>

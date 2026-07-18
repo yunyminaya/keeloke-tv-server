@@ -92,7 +92,7 @@ public class SupportRestService  extends CommonRestService {
 		try {
 			Version version = RestServiceBase.getSoftwareVersion();
 
-			HttpPost httpPost = new HttpPost("https://antmedia.io/livedemo/upload/upload.php");
+			HttpPost httpPost = new HttpPost("https://keeloke.com/livedemo/upload/upload.php");
 
 			RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(SEND_SUPPORT_CONNECT_TIMEOUT_SECONDS * 1000).setSocketTimeout(SEND_SUPPORT_SOCKET_TIMEOUT_SECONDS * 1000).build();
 

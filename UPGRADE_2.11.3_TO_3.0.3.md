@@ -1,7 +1,7 @@
 # Actualización 2.11.3 → 3.0.3 — verificada en vivo (2026-07-11)
 
 Este documento registra la actualización real de la instalación local de
-Keeloke TV Server de Ant Media Server Community 2.11.3 a 3.0.3, incluyendo
+Keeloke TV Server de Keeloke TV Server Community 2.11.3 a 3.0.3, incluyendo
 migración de los 3 plugins propios y todos los problemas reales encontrados.
 
 ## Resumen

@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Keeloke TV Server - Tenant Quota &amp; Usage Analytics Plugin.
  *
- * Treats each Ant Media "application" (LiveApp, WebRTCApp, or a custom app
+ * Treats each Keeloke TV "application" (LiveApp, WebRTCApp, or a custom app
  * you create per customer) as a tenant. For each tenant this plugin:
  *
  *  1. ENFORCES a configurable max-concurrent-streams quota by implementing
@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * decision (pricing, payment processor choice) rather than something to
  * hardcode here, plus a sketch of how to wire one in.
  *
- * v2 (Ant Media 3.0.3): IStreamPublishSecurity.isPublishAllowed() gained 3
+ * v2 (Keeloke TV 3.0.3): IStreamPublishSecurity.isPublishAllowed() gained 3
  * extra trailing String parameters in this server version vs 2.11.3 (their
  * exact semantics aren't documented in the public API surface we could
  * inspect - unused here, kept only to satisfy the interface signature).

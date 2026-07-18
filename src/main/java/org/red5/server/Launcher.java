@@ -79,7 +79,7 @@ public class Launcher {
 		// version info banner
 		Version version = RestServiceBase.getSoftwareVersion();
 		
-		log.info("Ant Media Server {} {} {}", version.getVersionType(), version.getVersionName(), version.getBuildNumber());
+		log.info("Keeloke TV Server {} {} {}", version.getVersionType(), version.getVersionName(), version.getBuildNumber());
 		printLogo();
 
 		if (log.isDebugEnabled()) {

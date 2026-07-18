@@ -92,7 +92,7 @@ public class ConsoleRestV2UnitTest {
 	private static final String LOG_TYPE_RANDOM = "random";
 	private static final String TEST_LOG_LOCATION = "target/test-classes/ant-media-server.log";
 	private static final String FILE_NOT_EXIST = "There are no registered logs yet";
-	private static final String CREATED_FILE_TEXT = "2019-04-24 19:01:24,291 [main] INFO  org.red5.server.Launcher - Ant Media Server Enterprise 1.7.0-SNAPSHOT\n" +
+	private static final String CREATED_FILE_TEXT = "2019-04-24 19:01:24,291 [main] INFO  org.red5.server.Launcher - Keeloke TV Server Enterprise 1.7.0-SNAPSHOT\n" +
 			"2019-04-24 19:01:24,334 [main] INFO  o.s.c.s.FileSystemXmlApplicationContext - Refreshing org.springframework.context.support.FileSystemXmlApplicationContext@f0f2775: startup date [Wed Apr 24 19:01:24 EET 2019]; root of context hierarchy";
 
 
@@ -294,7 +294,7 @@ public class ConsoleRestV2UnitTest {
 		Awaitility.await().atMost(10, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).until(() -> {
 			HashMap<String,String> appNameUserTypeMap = new HashMap<>();
 			appNameUserTypeMap.put("system", UserType.ADMIN.toString());
-			boolean sendUserInfo = restServiceSpy.sendUserInfo("test@antmedia.io", "firstname", "lastname","system","admin", appNameUserTypeMap);
+			boolean sendUserInfo = restServiceSpy.sendUserInfo("test@keeloke.com", "firstname", "lastname","system","admin", appNameUserTypeMap);
 			return sendUserInfo;
 		});
 	}

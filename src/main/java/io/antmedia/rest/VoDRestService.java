@@ -36,18 +36,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @OpenAPIDefinition(
 		info = @Info(
-				description = "Ant Media Server REST API Reference",
+				description = "Keeloke TV Server REST API Reference",
 				version = "V2.0",
-				title = "Ant Media Server REST API Reference",
-				contact = @Contact(name = "Ant Media Info", email = "contact@antmedia.io", url = "https://antmedia.io"),
+				title = "Keeloke TV Server REST API Reference",
+				contact = @Contact(name = "Keeloke TV Info", email = "info@keeloke.com", url = "https://keeloke.com"),
 				license = @License(name = "Apache 2.0", url = "http://www.apache.org")),
 		servers = {
 				@Server(
 						description = "test server",
-						url = "https://test.antmedia.io:5443/Sandbox/rest/"
+						url = "https://test.keeloke.com:5443/Sandbox/rest/"
 
 						)},
-		externalDocs = @ExternalDocumentation(url = "https://antmedia.io")
+		externalDocs = @ExternalDocumentation(url = "https://keeloke.com")
 		)
 
 @Component
@@ -135,7 +135,7 @@ public class VoDRestService extends RestServiceBase{
 
 
 
-    @Operation(summary = "Upload external VoD file to Ant Media Server", description = "Uploads an external VoD file to Ant Media Server.", responses = {
+    @Operation(summary = "Upload external VoD file to Keeloke TV Server", description = "Uploads an external VoD file to Keeloke TV Server.", responses = {
             @ApiResponse(responseCode = "200", description = "VoD file uploaded successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class)))
     })
     @POST

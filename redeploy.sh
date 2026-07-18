@@ -37,12 +37,12 @@ fi
 
 
 
-#go to ant media server dir
+#go to Keeloke TV Server dir
 cd $ANT_MEDIA_SERVER_DIR
 
-#shutdown ant media server
+#shutdown Keeloke TV Server
 ./shutdown.sh
 
 
-#start ant media server
+#start Keeloke TV Server
 ./start-debug.sh

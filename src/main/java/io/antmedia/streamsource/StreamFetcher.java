@@ -623,7 +623,7 @@ public class StreamFetcher {
 			 *  }
 			 *
 			 *  The code snippet above is moved to the writePacket method.  Story below is about 5 years old and
-			 *  I'm still working to improve Ant Media Server. I'm still in this journey and I hope what we're doing makes us be part of the solution
+			 *  I'm still working to improve Keeloke TV Server. I'm still in this journey and I hope what we're doing makes us be part of the solution
 			 *  and inspire some people in the world.
 			 *  @mekya, Dec 26, 2023.
 			 *

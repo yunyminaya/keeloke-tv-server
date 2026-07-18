@@ -107,7 +107,7 @@ public class AntmediaAppender extends AppenderBase<ILoggingEvent> {
 				numberOfCalls ++;
 			} 
 			catch (Exception e) {
-				logger.error("Couldn't connect Ant Media Server Analytics: {} " , ExceptionUtils.getStackTrace(e));
+				logger.error("Couldn't connect Keeloke TV Server Analytics: {} " , ExceptionUtils.getStackTrace(e));
 				numberOfException ++;
 			} 
 		});

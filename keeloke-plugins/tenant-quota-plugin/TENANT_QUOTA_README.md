@@ -3,7 +3,7 @@
 ## Qué hace de verdad
 
 - **Cuotas reales**: implementa `org.red5.server.api.stream.IStreamPublishSecurity`,
-  el gate real que Ant Media consulta antes de aceptar un publish. Si un
+  el gate real que Keeloke TV consulta antes de aceptar un publish. Si un
   tenant (aplicación) supera su límite de streams concurrentes, el publish
   se **rechaza de verdad**, no es solo un log.
 - **Métricas de uso**: minutos de stream acumulados y conteo de streams por
@@ -14,7 +14,7 @@
 
 ## RBAC / multiusuario: no reinventado
 
-Ant Media Community **ya trae** `io.antmedia.datastore.db.types.User` con
+Keeloke TV Community **ya trae** `io.antmedia.datastore.db.types.User` con
 roles `ADMIN`, `USER`, `READ_ONLY` y asignación de rol por aplicación
 (`getAppNameUserType()`), gestionado desde el panel de administración
 (`webapps/root`) que ya rebrandeamos con el logo de Keeloke TV. Reconstruir
@@ -39,7 +39,7 @@ dos cosas (no implementadas aquí a propósito, en vez de adivinar mal):
    `isPublishAllowed()` (que sí conoce ambos), y consultarlo en
    `streamStarted`/`streamFinished`. Es un cambio de ~10 líneas, dejado
    fuera de este commit para no mezclarlo sin que alguien lo revise contra
-   el comportamiento real de reconexión/multi-publish de Ant Media primero.
+   el comportamiento real de reconexión/multi-publish de Keeloke TV primero.
 2. O correr un plugin distinto por aplicación (un bean por tenant), que
    automáticamente sabe su propio nombre de app.
 

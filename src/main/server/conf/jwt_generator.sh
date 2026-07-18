@@ -15,7 +15,7 @@ generate_jwt() {
     # Payload
     current_time=$(date +%s)
     expiration_time=$((current_time + 31536000)) # 365 days from now
-    payload='{"name":"antmedia.io","exp":'$expiration_time'}'
+    payload='{"name":"keeloke.com","exp":'$expiration_time'}'
     base64_payload=$(echo -n "$payload" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
     # Signature
     signature=$(echo -n "$base64_header.$base64_payload" | openssl dgst -sha256 -hmac "$SECRET_KEY" -binary | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')

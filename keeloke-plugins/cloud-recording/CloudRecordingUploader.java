@@ -8,7 +8,7 @@ import java.util.concurrent.*;
 /**
  * Keeloke TV Server - Cloud Recording Uploader.
  *
- * Ant Media Server Community Edition (this install, 2.11.3) does not expose a
+ * Keeloke TV Server Community Edition (this install, 2.11.3) does not expose a
  * public "recording finished" plugin hook - that's only wired up internally.
  * Rather than patch the server jar (fragile across upgrades), this watches the
  * recordings directories directly and uploads each finished .mp4 to S3-compatible

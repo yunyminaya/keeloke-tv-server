@@ -46,7 +46,7 @@ con FFmpeg, y se consultaron los endpoints REST en vivo.
    `<ref bean="tenantQuotaPlugin"/>` a esa lista en las 3 apps.
 
 8. **Los `@RestController`/`@RequestMapping` (Spring MVC) de los 3 plugins
-   devolvían 404 en todas las rutas.** Causa: Ant Media Server usa
+   devolvían 404 en todas las rutas.** Causa: Keeloke TV Server usa
    JAX-RS/Jersey (mapeado en `/rest/*`, escaneando `io.antmedia.rest`), no
    Spring MVC — no hay `DispatcherServlet` registrado. Se reescribieron los
    3 REST services con anotaciones JAX-RS (`@Path`, `@GET`, etc.) y se

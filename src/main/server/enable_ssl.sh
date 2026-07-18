@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script lets you install SSL(HTTPS) to your Ant Media Server.
+# This script lets you install SSL(HTTPS) to your Keeloke TV Server.
 # - Free Domain: If you don't have any domain and you're an enterprise user, just type:
 #   `sudo ./enable_ssl.sh `.
 #   It will give you an auto-generated subdomain of antmedia.cloud and you'll have the SSL installed
@@ -46,7 +46,7 @@ do
    esac
 done
 
-ERROR_MESSAGE="There is a problem in installing SSL to Ant Media Server.\n Please take a look at the logs above and try to fix.\n If you do not have any idea, contact@antmedia.io"
+ERROR_MESSAGE="There is a problem in installing SSL to Keeloke TV Server.\n Please take a look at the logs above and try to fix.\n If you do not have any idea, info@keeloke.com"
 usage() {
 
   echo "Usage commands for different scenarios:"
@@ -63,7 +63,7 @@ usage() {
   echo "- Install SSL with your own certificate and your custom domain. Just type:"
   echo "  $0 -f {FULL_CHAIN_FILE} -p {PRIVATE_KEY_FILE} -c {CHAIN_FILE} -d {DOMAIN_NAME} [-i {INSTALL_DIRECTORY}]"
   echo " "
-  echo -e "If you have any question, send e-mail to contact@antmedia.io\n"
+  echo -e "If you have any question, send e-mail to info@keeloke.com\n"
 }
 
 ipt_remove() {
@@ -240,7 +240,7 @@ get_freedomain(){
   ip=`curl -s http://checkip.amazonaws.com`
   if [ ! -z $get_license_key ]; then
     if [ `cat $INSTALL_DIRECTORY/conf/red5.properties | egrep "rtmps.keystorepass=ams-[0-9]*.antmedia.cloud"|wc -l` == "0" ]; then   
-      check_api=`curl -s -X POST -H "Content-Type: application/json" "https://route.antmedia.io/create?domain=$hostname&ip=$ip&license=$get_license_key"`
+      check_api=`curl -s -X POST -H "Content-Type: application/json" "https://route.keeloke.com/create?domain=$hostname&ip=$ip&license=$get_license_key"`
       if [ $? != 0 ]; then
         echo "There is a problem with the script. Please re-run the enable_ssl.sh script."
         exit 1
@@ -259,7 +259,7 @@ get_freedomain(){
       domain=`cat $INSTALL_DIRECTORY/conf/red5.properties |egrep "ams-[0-9]*.antmedia.cloud" -o | uniq`
     fi
   elif [ $(curl -s -L "$REST_URL" --header "ProxyAuthorization: $JWT_KEY" | jq -e '.buildForMarket' 2>/dev/null) == "true" ]; then
-    check_api=`curl -s -X POST -H "Content-Type: application/json" "https://route.antmedia.io/create?domain=$hostname&ip=$ip&license=marketplace"`
+    check_api=`curl -s -X POST -H "Content-Type: application/json" "https://route.keeloke.com/create?domain=$hostname&ip=$ip&license=marketplace"`
     wait_for_dns_validation "$hostname"
     domain="$hostname"".antmedia.cloud"
     freedomain="true" 
@@ -496,8 +496,8 @@ fi
 
 if [ ! -d "$INSTALL_DIRECTORY" ]; then
   # Control will enter here if $DIRECTORY doesn't exist.
-  echo "Ant Media Server does not seem to be installed to $INSTALL_DIRECTORY"
-  echo "Please install Ant Media Server with the install script or give as a parameter"
+  echo "Keeloke TV Server does not seem to be installed to $INSTALL_DIRECTORY"
+  echo "Please install Keeloke TV Server with the install script or give as a parameter"
   usage
   exit 1
 fi
@@ -548,13 +548,13 @@ ipt_restore
 echo ""
 
 if is_docker_container; then
-    echo "You are running Ant Media Server in a Docker container. Please restart the container to apply the changes."
+    echo "You are running Keeloke TV Server in a Docker container. Please restart the container to apply the changes."
     kill -HUP 1
 elif [ "$restart_service" == "true" ]; then 
-    echo "Restarting Ant Media Server..."
+    echo "Restarting Keeloke TV Server..."
     $SUDO service antmedia restart
 else
-    echo "Ant Media Server is not restarted because script is called just to install the ssl. Please restart it manually to apply the changes."
+    echo "Keeloke TV Server is not restarted because script is called just to install the ssl. Please restart it manually to apply the changes."
 fi
 
 output

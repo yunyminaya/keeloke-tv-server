@@ -95,7 +95,7 @@ public class ConsoleAppRestServiceTest{
 	private static final String LOG_LEVEL_WARN = "WARN";
 	private static final String LOG_LEVEL_TEST = "TEST";
 
-	private static String TEST_USER_EMAIL = "test@antmedia.io";
+	private static String TEST_USER_EMAIL = "test@keeloke.com";
 	private static String TEST_USER_PASS = "05a671c66aefea124cc08b76ea6d30bb"; // hash of "testtest"
 	private static Process tmpExec;
 	private static final String SERVER_ADDR = ServerSettings.getLocalHostAddress(); 
@@ -3287,7 +3287,7 @@ public class ConsoleAppRestServiceTest{
 		//"system" as key means all existing apps.
 
 		User user1 = new User();
-		user1.setEmail("userTest1@antmedia.io");
+		user1.setEmail("userTest1@keeloke.com");
 		user1.setPassword(TEST_USER_PASS);
 		Map user1AppNameUserTypeMap = new HashMap();
 		user1AppNameUserTypeMap.put(appName1, UserType.ADMIN);
@@ -3372,7 +3372,7 @@ public class ConsoleAppRestServiceTest{
 		//user1 is not system level admin cannot create new user.
 
 		User userNotToBeCreated = new User();
-		userNotToBeCreated.setEmail("shouldntBeAbleToCreate@antmedia.io");
+		userNotToBeCreated.setEmail("shouldntBeAbleToCreate@keeloke.com");
 		userNotToBeCreated.setPassword(TEST_USER_PASS);
 		Map userNotToBeCreatedAppNameUserTypeMap = new HashMap();
 		//scope system means all apps.
@@ -3383,7 +3383,7 @@ public class ConsoleAppRestServiceTest{
 
 		//USER2 ADMIN AT ALL APPS.
 		User user2 = new User();
-		user2.setEmail("userTest2@antmedia.io");
+		user2.setEmail("userTest2@keeloke.com");
 		user2.setPassword(TEST_USER_PASS);
 		Map user2AppNameUserTypeMap = new HashMap();
 		//scope system means all apps.
@@ -3459,7 +3459,7 @@ public class ConsoleAppRestServiceTest{
 
 		//USER3 USER AT ALL APPS.
 		User user3 = new User();
-		user3.setEmail("userTest3@antmedia.io");
+		user3.setEmail("userTest3@keeloke.com");
 		user3.setPassword(TEST_USER_PASS);
 		Map user3AppNameUserTypeMap = new HashMap();
 		//scope system means all apps.
@@ -3539,7 +3539,7 @@ public class ConsoleAppRestServiceTest{
 
 		//USER4 READ_ONLY AT ALL APPS.
 		User user4 = new User();
-		user4.setEmail("userTest4@antmedia.io");
+		user4.setEmail("userTest4@keeloke.com");
 		user4.setPassword(TEST_USER_PASS);
 		Map user4AppNameUserTypeMap = new HashMap();
 		//scope system means all apps.
@@ -3620,7 +3620,7 @@ public class ConsoleAppRestServiceTest{
 
 		//USER5
 		User user5 = new User();
-		user5.setEmail("userTest5@antmedia.io");
+		user5.setEmail("userTest5@keeloke.com");
 		user5.setPassword(TEST_USER_PASS);
 		Map user5AppNameUserTypeMap = new HashMap();
 		user5AppNameUserTypeMap.put(appName1, UserType.READ_ONLY);
@@ -3700,7 +3700,7 @@ public class ConsoleAppRestServiceTest{
 
 		//USER6
 		User user6 = new User();
-		user6.setEmail("userTest6@antmedia.io");
+		user6.setEmail("userTest6@keeloke.com");
 		user6.setPassword(TEST_USER_PASS);
 		Map user6AppNameUserTypeMap = new HashMap();
 		user6AppNameUserTypeMap.put(appName1, UserType.USER);
@@ -3781,7 +3781,7 @@ public class ConsoleAppRestServiceTest{
 
 		//USER7
 		User user7 = new User();
-		user7.setEmail("userTest7@antmedia.io");
+		user7.setEmail("userTest7@keeloke.com");
 		user7.setPassword(TEST_USER_PASS);
 		Map user7AppNameUserTypeMap = new HashMap();
 		user7AppNameUserTypeMap.put(appName1, UserType.ADMIN);

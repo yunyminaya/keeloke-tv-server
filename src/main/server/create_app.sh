@@ -9,7 +9,7 @@ usage() {
   echo "-n: Name of the application that you want to have. It's mandatory. Make sure there is no application with the same name"
   echo "-m: Database URI including username and password. It can be MongoDB or RedisDB connection url. If it's a cluster, it's mandatory. Otherwise optional"
   echo "-f: war file path for custom app deployment"
-  echo "-p: (Optional) Path is the install location of Ant Media Server which is /usr/local/antmedia by default."
+  echo "-p: (Optional) Path is the install location of Keeloke TV Server which is /usr/local/antmedia by default."
   echo "-w: (Optional) The flag to deploy application as war file. Default value is false"
   echo "-c: (Optional) The flag to deploy application in cluster mode. Default value is false"
   echo "-u: (Deprecated: Add username to Database URI with -m option)Mongo DB user or Redis user. If it's a cluster, it's mandatory. Otherwise optional"
@@ -23,7 +23,7 @@ usage() {
   echo "Deploy as war file"
   echo "$0 -n live -w false "
   echo " "
-  echo "If you have any question, send e-mail to contact@antmedia.io"
+  echo "If you have any question, send e-mail to info@keeloke.com"
 }
 
 echo "all parameters"

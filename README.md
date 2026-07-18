@@ -17,16 +17,16 @@ Scalable open-source media server for live streaming, adaptive bitrate (ABR),
 real-time communication (RTC), recording, and cloud auto-scaling.  
 Supports **WebRTC, SRT, RTMP, HLS, CMAF, RTSP, and H.265/HEVC**.
 
-> Keeloke TV Server is a rebranded distribution built on top of [Ant Media Server](https://github.com/ant-media/Ant-Media-Server) (Community Edition, Apache 2.0 license).
+> Keeloke TV Server is a rebranded distribution built on top of [Keeloke TV Server](https://github.com/ant-media/Ant-Media-Server) (Community Edition, Apache 2.0 license).
 
 ---
 
 ## ⚡ Quickstart
 
-- [Try WebRTC Demos](https://antmedia.io/webrtc-samples?utm_source=github&utm_medium=readme&utm_campaign=ams)  
-- [Free Trial for Enterprise Edition](https://antmedia.io/free-trial/)  
+- [Try WebRTC Demos](https://keeloke.com/webrtc-samples?utm_source=github&utm_medium=readme&utm_campaign=ams)  
+- [Free Trial for Enterprise Edition](https://keeloke.com/free-trial/)  
 - [AWS Free Trial: Start now!](https://aws.amazon.com/marketplace/pp/prodview-464ritgzkzod6)  
-- [Create your own streaming service at scale in 5 minutes](https://antmedia.io/aws-streaming-service-wizard)  
+- [Create your own streaming service at scale in 5 minutes](https://keeloke.com/aws-streaming-service-wizard)  
 - [Discover the reviews on Capterra](https://www.capterra.in/software/183566/ant-media-server)
 
 ---
@@ -54,20 +54,20 @@ With AMS, you’re not just streaming video — you’re creating **real-time in
 
 Ready to embark on your streaming journey? Here's what you need to do:
 
-1. **[Explore our Documentation](https://antmedia.io/docs/quick-start/):** Features, installation, API references, tutorials.  
+1. **[Explore our Documentation](https://keeloke.com/docs/quick-start/):** Features, installation, API references, tutorials.  
 2. **[Join the Community](https://github.com/orgs/ant-media/discussions):** Share ideas, get support, and stay updated.  
 3. **[Download & Install](https://github.com/ant-media/Ant-Media-Server/releases):** Get the latest Community Edition release.  
-4. **[Upgrade to Enterprise Edition](https://antmedia.io/free-trial/):** Get your 14-day free trial. Adaptive & Scalable Ultra-Low Latency WebRTC Streaming Software.  
+4. **[Upgrade to Enterprise Edition](https://keeloke.com/free-trial/):** Get your 14-day free trial. Adaptive & Scalable Ultra-Low Latency WebRTC Streaming Software.  
 
 ---
 
 ## ☁️ Seamless Deployment
 
-Deploy Ant Media Server seamlessly on your favorite cloud platforms with **1-Click apps, cloud marketplaces, or Docker/Kubernetes/Scripts**.  
+Deploy Keeloke TV Server seamlessly on your favorite cloud platforms with **1-Click apps, cloud marketplaces, or Docker/Kubernetes/Scripts**.  
 
 ### On-Premises
-- [Linux Install Script](https://antmedia.io/docs/guides/installing-on-linux/installing-ams-on-linux/)  
-- [SSL Setup](https://antmedia.io/docs/guides/installing-on-linux/setting-up-ssl/)  
+- [Linux Install Script](https://keeloke.com/docs/guides/installing-on-linux/installing-ams-on-linux/)  
+- [SSL Setup](https://keeloke.com/docs/guides/installing-on-linux/setting-up-ssl/)  
 
 ### Cloud Marketplaces
 
@@ -78,21 +78,21 @@ Deploy Ant Media Server seamlessly on your favorite cloud platforms with **1-Cli
 | GCP            | - | [Link](https://console.cloud.google.com/marketplace/product/antmedia-public/ant-media-server-enterprise-edition) |
 
 🔧 **Auto-Scaling in 5 Minutes**  
-[CloudFormation Guide](https://antmedia.io/docs/guides/clustering-and-scaling/aws/scale-with-aws-cloudformation/) | [Demo Video](https://www.youtube.com/watch?v=y7bP0u0jQRQ)
+[CloudFormation Guide](https://keeloke.com/docs/guides/clustering-and-scaling/aws/scale-with-aws-cloudformation/) | [Demo Video](https://www.youtube.com/watch?v=y7bP0u0jQRQ)
 
 ---
 
 ## 🎯 Use Cases — Real-Time Streaming Applications
 
-Ant Media Server powers diverse industries with ultra-low latency video:
+Keeloke TV Server powers diverse industries with ultra-low latency video:
 
-- 🏥 [Telehealth & Remote Patient Care](https://antmedia.io/solutions/telehealth/)  
-- 🎓 [E-learning & Virtual Classrooms](https://antmedia.io/solutions/webinar-e-learning-virtual-classroom/)  
-- 🎮 [Gaming and E-sports Live Streaming](https://antmedia.io/solutions/video-game-streaming/)  
-- 🛒 [Auction & Live Shopping](https://antmedia.io/solutions/auction-bidding/)  
-- 📺 [Media & Entertainment](https://antmedia.io/solutions/media-entertainment/)  
-- 🛡 [Video Monitoring & Surveillance](https://antmedia.io/solutions/ip-camera-streaming/)
-- 💰 [Live Shopping](https://antmedia.io/solutions/live-shopping/)
+- 🏥 [Telehealth & Remote Patient Care](https://keeloke.com/solutions/telehealth/)  
+- 🎓 [E-learning & Virtual Classrooms](https://keeloke.com/solutions/webinar-e-learning-virtual-classroom/)  
+- 🎮 [Gaming and E-sports Live Streaming](https://keeloke.com/solutions/video-game-streaming/)  
+- 🛒 [Auction & Live Shopping](https://keeloke.com/solutions/auction-bidding/)  
+- 📺 [Media & Entertainment](https://keeloke.com/solutions/media-entertainment/)  
+- 🛡 [Video Monitoring & Surveillance](https://keeloke.com/solutions/ip-camera-streaming/)
+- 💰 [Live Shopping](https://keeloke.com/solutions/live-shopping/)
 
 ---
 
@@ -100,14 +100,14 @@ Ant Media Server powers diverse industries with ultra-low latency video:
 
 - **Community Edition:** [GitHub Discussions](https://github.com/orgs/ant-media/discussions)  
 - **Enterprise Edition:** Includes email support  
-- [Support Packages](https://antmedia.io/support-packages/) available  
+- [Support Packages](https://keeloke.com/support-packages/) available  
 
-📩 Contact us: [support@antmedia.io](mailto:support@antmedia.io)  
+📩 Contact us: [support@keeloke.com](mailto:support@keeloke.com)  
 
 ---
 
-[antmedia.io](https://antmedia.io)
+[keeloke.com](https://keeloke.com)
 
 <div align='center'>
-   <a href="https://antmedia.io"><img src="https://user-images.githubusercontent.com/54481799/95862105-16cb0e00-0d6b-11eb-9087-88888889825d.png" height="60"></a>
+   <a href="https://keeloke.com"><img src="https://user-images.githubusercontent.com/54481799/95862105-16cb0e00-0d6b-11eb-9087-88888889825d.png" height="60"></a>
 </div>

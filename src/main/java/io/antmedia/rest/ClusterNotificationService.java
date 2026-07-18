@@ -31,12 +31,12 @@ import jakarta.ws.rs.core.MediaType;
 
 @OpenAPIDefinition(
 		info = @Info(
-				description = "Ant Media Server Internal Cluster REST API Reference",
+				description = "Keeloke TV Server Internal Cluster REST API Reference",
 				version = "V1.0",
-				title = "Ant Media Server Internal Cluster REST API Reference",
-				contact = @Contact(name = "Ant Media Info", email = "contact@antmedia.io", url = "https://antmedia.io"),
+				title = "Keeloke TV Server Internal Cluster REST API Reference",
+				contact = @Contact(name = "Keeloke TV Info", email = "info@keeloke.com", url = "https://keeloke.com"),
 				license = @License(name = "Apache 2.0", url = "http://www.apache.org")),
-		externalDocs = @ExternalDocumentation(url = "https://antmedia.io")
+		externalDocs = @ExternalDocumentation(url = "https://keeloke.com")
 		)
 
 @Component

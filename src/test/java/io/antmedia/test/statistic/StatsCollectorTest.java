@@ -165,7 +165,7 @@ public class StatsCollectorTest {
 		Mockito.when(adminApp.getDataStoreFactory()).thenReturn(dtFactory);
 
 		List<User> userList = new ArrayList<>();
-		String userEmail = "test@antmedia.io";
+		String userEmail = "test@keeloke.com";
 		User user = new User(userEmail, null, UserType.ADMIN, CommonRestService.SCOPE_SYSTEM, null);
 		userList.add(user);
 		Mockito.when(dataStore.getUserList()).thenReturn(userList);

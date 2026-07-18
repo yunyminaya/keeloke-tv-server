@@ -270,7 +270,7 @@ public class CommonRestService {
 		{
 			Version version = RestServiceBase.getSoftwareVersion();
 
-			HttpPost httpPost = new HttpPost("https://antmedia.io/livedemo/ams_web_panel_registration.php");
+			HttpPost httpPost = new HttpPost("https://keeloke.com/livedemo/ams_web_panel_registration.php");
 
 			RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(2 * 1000).setSocketTimeout(5*1000).build();
 

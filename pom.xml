@@ -8,13 +8,13 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     <modelVersion>4.0.0</modelVersion>
     <artifactId>ant-media-server</artifactId>
     <name>Keeloke TV Server</name>
-    <description>Keeloke TV Server supports RTMP, RTSP, MP4, HLS, WebRTC, Adaptive Streaming, etc. (based on Ant Media Server, Apache 2.0)</description>
+    <description>Keeloke TV Server supports RTMP, RTSP, MP4, HLS, WebRTC, Adaptive Streaming, etc. (based on Keeloke TV Server, Apache 2.0)</description>
     <packaging>jar</packaging>
     <url>https://github.com/ant-media/Ant-Media-Server</url>
     <version>${project.parent.version}</version>
     <organization>
         <name>Keeloke TV</name>
-        <url>https://antmedia.io</url>
+        <url>https://keeloke.com</url>
     </organization>
     <licenses>
         <license>

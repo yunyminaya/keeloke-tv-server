@@ -13,7 +13,7 @@ public class EncoderSettings implements Serializable{
 
 	/*
  	* Enable/Disable stream resolution check flag
-	 * If it's enabled, Ant Media Server will ignore if the adaptive requested resolution is higher than the incoming stream
+	 * If it's enabled, Keeloke TV Server will ignore if the adaptive requested resolution is higher than the incoming stream
 	 *  It's true by default
  */
 	private boolean  forceEncode = true;

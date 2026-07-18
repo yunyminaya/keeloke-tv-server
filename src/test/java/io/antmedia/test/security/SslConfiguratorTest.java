@@ -59,7 +59,7 @@ public class SslConfiguratorTest {
     	
     	 SslConfigurator sslConfigurator = new SslConfigurator();
     	 sslConfigurator.setType(SslConfigurationType.CUSTOM_DOMAIN);
-    	 sslConfigurator.setDomain("test.antmedia.io");
+    	 sslConfigurator.setDomain("test.keeloke.com");
     	 
     	 String command = sslConfigurator.getCommand();
     	 
@@ -77,7 +77,7 @@ public class SslConfiguratorTest {
     	 sslConfigurator.setPrivateKeyFile(new File("privatekey.pem"));
     	 command = sslConfigurator.getCommand();
     	 
-    	 assertEquals("sudo /bin/bash enable_ssl.sh -f "+ installDirectory +"/fullchain.pem -p "+ installDirectory + "/privatekey.pem -c " + installDirectory + "/chain.pem -d test.antmedia.io -i " +installDirectory, command); 
+    	 assertEquals("sudo /bin/bash enable_ssl.sh -f "+ installDirectory +"/fullchain.pem -p "+ installDirectory + "/privatekey.pem -c " + installDirectory + "/chain.pem -d test.keeloke.com -i " +installDirectory, command); 
 
 
     	 sslConfigurator.setType(SslConfigurationType.NO_SSL);

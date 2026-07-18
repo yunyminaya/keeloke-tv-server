@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * Keeloke TV Server - Restream Plugin.
  *
- * Registers itself with the running Ant Media application as an
+ * Registers itself with the running Keeloke TV application as an
  * {@link IStreamListener}. When a stream starts, it looks up any configured
  * external destinations for that stream and forwards (restreams) it to all
  * of them simultaneously via FFmpeg. When the stream ends, all restreams for

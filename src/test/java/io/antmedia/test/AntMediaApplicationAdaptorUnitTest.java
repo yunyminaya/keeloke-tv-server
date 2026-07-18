@@ -267,17 +267,17 @@ public class AntMediaApplicationAdaptorUnitTest {
 
 	@Test
 	public void testEndpointReachable() {
-		boolean endpointReachable = AntMediaApplicationAdapter.isEndpointReachable("http://antmedia.io/not_exist");
+		boolean endpointReachable = AntMediaApplicationAdapter.isEndpointReachable("http://keeloke.com/not_exist");
 		//it should be true because we're just checking if it's reachable
 		assertTrue(endpointReachable);
 
-		endpointReachable = AntMediaApplicationAdapter.isEndpointReachable("http://antmedia.io:45454/not_exist");
+		endpointReachable = AntMediaApplicationAdapter.isEndpointReachable("http://keeloke.com:45454/not_exist");
 		assertFalse(endpointReachable);
 
-		boolean instanceAlive = AntMediaApplicationAdapter.isInstanceAlive("antmedia.io", null, 80, "");
+		boolean instanceAlive = AntMediaApplicationAdapter.isInstanceAlive("keeloke.com", null, 80, "");
 		assertTrue(instanceAlive);
 
-		instanceAlive = AntMediaApplicationAdapter.isInstanceAlive("antmedia.io", null, 4545, "");
+		instanceAlive = AntMediaApplicationAdapter.isInstanceAlive("keeloke.com", null, 4545, "");
 		assertFalse(instanceAlive);
 
 		instanceAlive = AntMediaApplicationAdapter.isInstanceAlive("", null, 4545, "");

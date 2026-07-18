@@ -46,7 +46,7 @@ public class PushNotificationRestServiceTest {
 		
 		JSONObject jsObject = new JSONObject();
 		jsObject.put("title", "hello world");
-		jsObject.put("apn-topic", "io.antmedia.ios.webrtc.sample");
+		jsObject.put("apn-topic", "io.keeloke.coms.webrtc.sample");
 		
 		pushNotificationRestService.sendPushNotification("topic", jsObject.toJSONString(),"fcm");
 		verify(pushNotificationService).sendNotification("topic", jsObject,"fcm");

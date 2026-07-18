@@ -7,13 +7,13 @@ usage() {
   echo "$0 -n APPLICATION_NAME [-p INSTALLATION_PATH]"
   echo "Options:"
   echo "-n: Application Name is the application name that you want to delete. It's mandatory"
-  echo "-p: Path is the install location of Ant Media Server which is /usr/local/antmedia by default."
+  echo "-p: Path is the install location of Keeloke TV Server which is /usr/local/antmedia by default."
   echo "-h: print this usage"
   echo " "
   echo "Example: "
   echo "$0 -n live"
   echo " "
-  echo "If you have any question, send e-mail to contact@antmedia.io"
+  echo "If you have any question, send e-mail to info@keeloke.com"
 }
 
 ERROR_MESSAGE="Error: App is not deleted. Please check the error in the terminal and take a look at the instructions below"

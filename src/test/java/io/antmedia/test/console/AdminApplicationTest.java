@@ -418,8 +418,8 @@ public class AdminApplicationTest {
 			AdminApplication adminApplication = Mockito.spy(new AdminApplication());
 			Mockito.doReturn(false).when(adminApplication).createApplication(Mockito.anyString(), Mockito.any());
 
-			adminApplication.createApplicationWithURL("app", "https://antmedia.io/rest", "secret");		
-			Mockito.verify(adminApplication).downloadWarFile("app", "https://antmedia.io/rest", "secret");
+			adminApplication.createApplicationWithURL("app", "https://keeloke.com/rest", "secret");		
+			Mockito.verify(adminApplication).downloadWarFile("app", "https://keeloke.com/rest", "secret");
 
 			adminApplication.createApplicationWithURL("app2", null, null);
 			//it should be never for app2 because url is null
@@ -445,12 +445,12 @@ public class AdminApplicationTest {
 			Mockito.doReturn(false).when(adminApplication).createApplication(Mockito.anyString(), Mockito.any());
 			
 			Mockito.doReturn(null).when(adminApplication).downloadWarFile(Mockito.anyString(), anyString(), anyString());
-			adminApplication.createApplicationWithURL("app6", "https://antmedia.io/rest", "secret");
+			adminApplication.createApplicationWithURL("app6", "https://keeloke.com/rest", "secret");
 			verify(adminApplication, never()).createApplication(Mockito.anyString(), Mockito.any());
 
 
 			Mockito.doReturn(new File("test")).when(adminApplication).downloadWarFile(Mockito.anyString(), anyString(), anyString());
-			adminApplication.createApplicationWithURL("app6", "https://antmedia.io/rest", "secret");
+			adminApplication.createApplicationWithURL("app6", "https://keeloke.com/rest", "secret");
 			verify(adminApplication, times(1)).createApplication(Mockito.anyString(), Mockito.any());
 
 
@@ -466,7 +466,7 @@ public class AdminApplicationTest {
 		AdminApplication adminApplication = Mockito.spy(new AdminApplication());
 		try{
 			//Just download something to check if it is downloading, the method only downloads with an http request.
-			assertNotNull(adminApplication.downloadWarFile("LiveApp", "https://antmedia.io/rest", "secret"));
+			assertNotNull(adminApplication.downloadWarFile("LiveApp", "https://keeloke.com/rest", "secret"));
 		}
 		catch(Exception e){
 			e.printStackTrace();

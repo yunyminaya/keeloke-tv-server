@@ -6425,7 +6425,7 @@ public class MuxerUnitTest {
 	}
 	@Test
 	public void testGetSetEndpointURl(){
-		String url = "rtmp://test.antmedia.io/LiveApp/test";
+		String url = "rtmp://test.keeloke.com/LiveApp/test";
 		Endpoint endpoint = new Endpoint();
 		endpoint.setEndpointUrl(url);
 		assertEquals(url,endpoint.getEndpointUrl());
@@ -6770,7 +6770,7 @@ public class MuxerUnitTest {
 
 	@Test
 	public void testGetOutputFormatCtx(){
-		EndpointMuxer endpointMuxer = spy(new EndpointMuxer("rtmp://test.antmedia.io/LiveApp/prepareIOTest2", vertx));
+		EndpointMuxer endpointMuxer = spy(new EndpointMuxer("rtmp://test.keeloke.com/LiveApp/prepareIOTest2", vertx));
 		endpointMuxer.setFormat("testing");
 		AVFormatContext ctx = endpointMuxer.getOutputFormatContext();
 		assert (endpointMuxer.getStatus().equals(BROADCAST_STATUS_FAILED));

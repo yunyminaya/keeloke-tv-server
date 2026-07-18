@@ -795,7 +795,7 @@ public class StreamSchedularUnitTest {
 		isStreamRunning = streamFetcherManager.isStreamRunning(broadcast);
 		assertTrue(isStreamRunning);
 
-		broadcast.setOriginAdress("not.accessible.antmedia.io");
+		broadcast.setOriginAdress("not.accessible.keeloke.com");
 		isStreamRunning = streamFetcherManager.isStreamRunning(broadcast);
 		assertFalse(isStreamRunning);
 

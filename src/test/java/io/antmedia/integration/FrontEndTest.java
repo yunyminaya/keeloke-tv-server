@@ -477,7 +477,7 @@ public class FrontEndTest {
 			String title = this.driver.getTitle();
 
 			System.out.println(this.url + " " + this.driver + " " + title);
-			assertEquals("Ant Media Server WebRTC/HLS/DASH Player", title);
+			assertEquals("Keeloke TV Server WebRTC/HLS/DASH Player", title);
 
 			assertTrue(checkAlert());
 

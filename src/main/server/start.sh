@@ -19,7 +19,7 @@
 #
 # -l: Licence Key
 
-# -a: TURN/STUN Server URL for the server side. It should start with "turn:" or "stun:" such as stun:stun.l.google.com:19302 or turn:ovh36.antmedia.io
+# -a: TURN/STUN Server URL for the server side. It should start with "turn:" or "stun:" such as stun:stun.l.google.com:19302 or turn:ovh36.keeloke.com
 #     this url is not visible to frontend users just for server side.
 #
 # -n: TURN Server Usermame: Provide the TURN server username to get relay candidates.
@@ -274,13 +274,13 @@ then
 fi
 
 
-# start Ant Media Server
+# start Keeloke TV Server
 
 if [ "$RED5_MAINCLASS" = "org.red5.server.Bootstrap" ]; then
-    # start Ant Media Server
-    echo "Starting Ant Media Server"
+    # start Keeloke TV Server
+    echo "Starting Keeloke TV Server"
 elif [ "$RED5_MAINCLASS" = "org.red5.server.Shutdown" ]; then
-    # stop Ant Media Server
-    echo "Stopping Ant Media Server"
+    # stop Keeloke TV Server
+    echo "Stopping Keeloke TV Server"
 fi
 exec "$JAVA" -Dred5.root="${RED5_HOME}" $JAVA_OPTS -cp "${RED5_CLASSPATH}" "$RED5_MAINCLASS" $RED5_OPTS 2>>${RED5_HOME}/log/antmedia-error.log

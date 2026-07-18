@@ -9,7 +9,7 @@
     <name>Keeloke TV - Tenant Quota &amp; Usage Analytics Plugin</name>
     <description>
         Adds per-application (tenant) concurrent-stream quotas and cumulative
-        usage metering (stream-minutes) on top of Ant Media Server Community
+        usage metering (stream-minutes) on top of Keeloke TV Server Community
         Edition. Uses the real org.red5.server.api.stream.IStreamPublishSecurity
         hook to actually reject publishes over quota (not just log them), and
         io.antmedia.plugin.api.IStreamListener to meter usage. User accounts and

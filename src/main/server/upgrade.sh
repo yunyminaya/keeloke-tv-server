@@ -5,7 +5,7 @@
 # -----------------------------------------------------------------------------
 
 # Description:
-#   This script facilitates the seamless update of Ant Media Server to the latest version,
+#   This script facilitates the seamless update of Keeloke TV Server to the latest version,
 #   ensuring you have the most up-to-date features, improvements, and bug fixes. 
 #   For more information: https://github.com/ant-media/Ant-Media-Server/releases
 
@@ -14,7 +14,7 @@
 #   2. Utilize the dashboard's integrated update feature for a user-friendly experience.
 
 # Note:
-#   - Ensure internet connectivity for downloading the latest Ant Media Server release.
+#   - Ensure internet connectivity for downloading the latest Keeloke TV Server release.
 
 # -----------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ INSTALL_DIRECTORY=$(dirname "$0")
 cd $INSTALL_DIRECTORY
 
 
-REMOTE_VERSION=$(curl -s https://antmedia.io/download/latest-version.json | jq -r ".versionName")
+REMOTE_VERSION=$(curl -s https://keeloke.com/download/latest-version.json | jq -r ".versionName")
 LOCAL_VERSION=$(unzip -p $INSTALL_DIRECTORY/ant-media-server.jar | grep -a "Implementation-Version"|cut -d' ' -f2 | tr -d '\r')
 GITHUB_LATEST_VERSION=$(curl -s -H "Accept: application/vnd.github+json" https://api.github.com/repos/ant-media/Ant-Media-Server/releases/latest | jq -r '.tag_name' | cut -d 'v' -f 2)
 
@@ -53,7 +53,7 @@ check_ams() {
 		  echo "It seems like an enterprise version. On the other hand, there is no license key. If this is a Cloud Marketplace build, upgrade your version through your Cloud Marketplace"
 	      exit 1
        elif [ "$GITHUB_LATEST_VERSION" == "$REMOTE_VERSION" ]; then
-         echo "Downloading the latest version of Ant Media Server Community Edition..."
+         echo "Downloading the latest version of Keeloke TV Server Community Edition..."
   		 curl --progress-bar -o ams_community.zip -L "$(curl -s -H "Accept: application/vnd.github+json" https://api.github.com/repos/ant-media/Ant-Media-Server/releases/latest | jq -r '.assets[0].browser_download_url')"   
     	 ANT_MEDIA_SERVER_ZIP_FILE="ams_community.zip"
 	   else
@@ -62,7 +62,7 @@ check_ams() {
   
     else
     	
-      check_license=$(curl -s https://api-v2.antmedia.io/?license="$get_license_key" | tr -d "\"")
+      check_license=$(curl -s https://api-v2.keeloke.com/?license="$get_license_key" | tr -d "\"")
             
        if [[ ! $check_license =~ ^http ]]; then
        	
@@ -74,7 +74,7 @@ check_ams() {
 		  	exit 1
 		  	
 	   else
-		  echo "Downloading the latest version of Ant Media Server Enterprise Edition..."
+		  echo "Downloading the latest version of Keeloke TV Server Enterprise Edition..."
 		  curl --progress-bar -o ams_enterprise.zip "$check_license"
 		  ANT_MEDIA_SERVER_ZIP_FILE="ams_enterprise.zip"
 		fi
@@ -93,6 +93,6 @@ elif [ "$REMOTE_VERSION" != "$LOCAL_VERSION" ]; then
     check_ams
 else
     # If the versions are equal, there is no need for an update
-    echo "There has been an error, please contact support@antmedia.io."
+    echo "There has been an error, please contact support@keeloke.com."
     exit 1
 fi
