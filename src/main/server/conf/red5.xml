@@ -59,7 +59,7 @@
 	</bean>
 
 
-	<bean id="ant.media.licence.service" class="#{ T(io.antmedia.rest.RestServiceBase).isEnterprise() ? 'io.antmedia.enterprise.licence.LicenceService' : 'io.antmedia.licence.CommunityLicenceService' }"
+	<bean id="ant.media.licence.service" class="io.antmedia.licence.KeelokeLicenceService"
 		  init-method="start">
 		<property name="serverSettings" ref="ant.media.server.settings" />
 	</bean>

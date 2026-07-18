@@ -3,7 +3,7 @@ package io.antmedia.licence;
 import io.antmedia.datastore.db.types.Licence;
 import io.antmedia.settings.ServerSettings;
 
-public class CommunityLicenceService implements ILicenceService{
+public class KeelokeLicenceService implements ILicenceService{
 	
 	public void start() {
 		//no need to implement for Community Edition
@@ -32,7 +32,7 @@ public class CommunityLicenceService implements ILicenceService{
 	
 	@Override
 	public String getLicenseType() {
-		return LICENCE_TYPE_COMMUNITY;
+		return LICENCE_TYPE_STANDARD;
 	}
 
 }
