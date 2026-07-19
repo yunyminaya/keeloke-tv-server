@@ -76,6 +76,13 @@
 				</bean>
 				<ref bean="publishIPFilter"/>
 				<ref bean="tenantQuotaPlugin"/>
+				<ref bean="streamAccessGuard"/>
+			</list>
+		</property>
+		<property name="streamPlaySecurityList">
+			<list>
+				<ref bean="streamAccessGuard"/>
+				<ref bean="viewerAnalyticsPlugin"/>
 			</list>
 		</property>
 	</bean>
