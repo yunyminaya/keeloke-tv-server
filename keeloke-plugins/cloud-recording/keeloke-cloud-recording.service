@@ -1,0 +1,20 @@
+[Unit]
+Description=Keeloke TV Server - Cloud Recording Uploader
+After=network.target antmedia.service
+Requires=antmedia.service
+
+[Service]
+Type=simple
+User=antmedia
+Group=antmedia
+WorkingDirectory=/usr/local/antmedia/keeloke-plugins/cloud-recording
+# Ajusta bucket / endpoint / credenciales antes de habilitar este servicio.
+# CloudRecordingUploader <webappsDir> <s3Bucket> [--endpoint-url=...] [--delete-after-upload]
+Environment=AWS_ACCESS_KEY_ID=CAMBIAME
+Environment=AWS_SECRET_ACCESS_KEY=CAMBIAME
+ExecStart=/usr/local/antmedia/keeloke-plugins/cloud-recording/run.sh /usr/local/antmedia/webapps CAMBIA-EL-BUCKET
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

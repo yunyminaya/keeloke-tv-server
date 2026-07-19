@@ -131,6 +131,21 @@ if [ -f "dashboard/index.html" ]; then
   fi
 fi
 
+# cloud-recording: sidecar standalone (no es un plugin Maven, no se auto-inicia).
+# Se compila aquí y se deja listo el .service de systemd para habilitarlo a mano
+# una vez configurado el bucket/credenciales.
+if [ -f "cloud-recording/CloudRecordingUploader.java" ]; then
+  ( cd cloud-recording && javac --release 17 -d . CloudRecordingUploader.java ) \
+    && green "  ✔ cloud-recording compilado (cloud-recording/CloudRecordingUploader.class)" \
+    || yellow "  ✗ no se pudo compilar cloud-recording (requiere JDK 17+ en PATH)"
+  if command -v systemctl >/dev/null 2>&1 && [ -f "cloud-recording/keeloke-cloud-recording.service" ]; then
+    yellow "  · unidad systemd disponible: cloud-recording/keeloke-cloud-recording.service"
+    yellow "    Edita el bucket/credenciales y luego:"
+    yellow "      sudo cp cloud-recording/keeloke-cloud-recording.service /etc/systemd/system/"
+    yellow "      sudo systemctl daemon-reload && sudo systemctl enable --now keeloke-cloud-recording"
+  fi
+fi
+
 # ---------- reinicio opcional ----------
 echo
 if [ "${RESTART:-0}" = "1" ]; then

@@ -40,8 +40,18 @@ public class SecurityConfigStore {
     }
 
     public TenantSecurityConfig get(String tenantApp) {
-        TenantSecurityConfig cfg = map().get(tenantApp);
-        return cfg != null ? cfg : new TenantSecurityConfig(tenantApp);
+        // Called synchronously from the publish/play hot path (StreamAccessGuard,
+        // WebhookDispatcher). A Redis hiccup or a thread interrupted by the RTMP
+        // connection executor under load must never abort the publish/play - fail
+        // open with the same permissive default used on a plain cache miss,
+        // rather than letting the exception propagate and kill the stream.
+        try {
+            TenantSecurityConfig cfg = map().get(tenantApp);
+            return cfg != null ? cfg : new TenantSecurityConfig(tenantApp);
+        } catch (Exception e) {
+            logger.warn("SecurityConfigStore.get({}) failed, falling back to permissive default: {}", tenantApp, e.getMessage());
+            return new TenantSecurityConfig(tenantApp);
+        }
     }
 
     public void save(TenantSecurityConfig config) {

@@ -68,17 +68,23 @@ public class ViewerAnalyticsPlugin implements IStreamPlaybackSecurity {
     @Override
     public boolean isPlayAllowed(IScope scope, String name, String mode, Map<String, String> queryParams,
                                   String metaData, String token, String subscriberId, String subscriberCode) {
-        String tenantApp = scope.getName();
-        String sessionId = (subscriberId != null && !subscriberId.isBlank()) ? subscriberId : sessionKeyFallback(name);
-        String remoteIp = remoteIp();
-        String country = remoteIp != null ? geoIpResolver.countryOf(remoteIp) : "XX";
+        // Best-effort analytics only - never let a Redis hiccup or an interrupted
+        // thread (both observed under concurrent load) turn into a rejected play.
+        try {
+            String tenantApp = scope.getName();
+            String sessionId = (subscriberId != null && !subscriberId.isBlank()) ? subscriberId : sessionKeyFallback(name);
+            String remoteIp = remoteIp();
+            String country = remoteIp != null ? geoIpResolver.countryOf(remoteIp) : "XX";
 
-        totalSessionsCounter(name).incrementAndGet();
-        presenceMap(name).put(sessionId, country, PRESENCE_TTL_SECONDS, TimeUnit.SECONDS);
-        countryCounter(name, country).incrementAndGet();
+            totalSessionsCounter(name).incrementAndGet();
+            presenceMap(name).put(sessionId, country, PRESENCE_TTL_SECONDS, TimeUnit.SECONDS);
+            countryCounter(name, country).incrementAndGet();
 
-        webhookDispatcher.dispatch(tenantApp, "viewer.joined", Map.of(
-                "streamId", name, "sessionId", sessionId, "country", country));
+            webhookDispatcher.dispatch(tenantApp, "viewer.joined", Map.of(
+                    "streamId", name, "sessionId", sessionId, "country", country));
+        } catch (Exception e) {
+            logger.warn("ViewerAnalyticsPlugin.isPlayAllowed({}) analytics recording failed (playback still allowed): {}", name, e.getMessage());
+        }
 
         return true; // never blocks - StreamAccessGuard is the enforcement point
     }
