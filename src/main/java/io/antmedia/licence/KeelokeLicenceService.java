@@ -32,7 +32,7 @@ public class KeelokeLicenceService implements ILicenceService{
 	
 	@Override
 	public String getLicenseType() {
-		return LICENCE_TYPE_STANDARD;
+		return LICENCE_TYPE_COMMUNITY;
 	}
 
 }

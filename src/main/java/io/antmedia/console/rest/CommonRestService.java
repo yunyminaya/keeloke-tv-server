@@ -1136,8 +1136,8 @@ public class CommonRestService {
 
 
 	public Result isEnterpriseEdition(){
-		// Keeloke TV Server - always enterprise
-		return new Result(true, "");
+		boolean isEnterprise = RestServiceBase.isEnterprise();
+		return new Result(isEnterprise, "");
 	}
 
 
