@@ -152,7 +152,7 @@ public class ClusterRegistryPlugin implements IStreamListener, ApplicationContex
 
     @Override
     public void streamFinished(Broadcast broadcast) {
-        activeStreamCount.decrementAndGet();
+        activeStreamCount.updateAndGet(count -> Math.max(0, count - 1));
         if (broadcast != null && broadcast.getStreamId() != null) {
             originRegistry.removeOrigin(broadcast.getStreamId());
         }

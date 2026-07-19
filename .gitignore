@@ -25,3 +25,5 @@ temp/
 /binsrc/test/resources/
 test_avc.ts
 .github/
+
+dependency-reduced-pom.xml

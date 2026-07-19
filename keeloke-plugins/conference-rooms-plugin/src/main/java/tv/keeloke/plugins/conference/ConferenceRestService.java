@@ -33,10 +33,13 @@ public class ConferenceRestService {
     @POST
     @Path("/rooms")
     @Produces(MediaType.APPLICATION_JSON)
-    public ConferenceRoom create(@QueryParam("roomId") String roomId,
-                                  @QueryParam("maxPublishers") Integer maxPublishers,
-                                  @QueryParam("maxParticipants") Integer maxParticipants) {
-        return rooms().create(roomId, maxPublishers, maxParticipants);
+    public Response create(@QueryParam("roomId") String roomId,
+                            @QueryParam("maxPublishers") Integer maxPublishers,
+                            @QueryParam("maxParticipants") Integer maxParticipants) {
+        if (roomId == null || roomId.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("roomId query parameter is required").build();
+        }
+        return Response.ok(rooms().create(roomId, maxPublishers, maxParticipants)).build();
     }
 
     @GET
